@@ -1,0 +1,25 @@
+{
+  "name": "samar-prototype",
+  "version": "1.0.0",
+  "description": "SAMAR - Pseudonimisasi dinamis sebagai enabler deteksi kecurangan klaim lintas-faskes JKN (prototipe Healthkathon 2026)",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node scripts/dev.js",
+    "test": "node scripts/run-tests.js",
+    "evaluate": "node scripts/evaluate.js",
+    "reset": "node scripts/reset.js",
+    "reset:neon": "node scripts/reset.js --drop-schemas",
+    "gen-secrets": "node scripts/gen-secrets.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "zod": "^3.24.1"
+  }
+}

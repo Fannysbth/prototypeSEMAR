@@ -1,0 +1,15 @@
+# OPSIONAL. Satu kontainer menjalankan semua layanan (Gateway + 5 microservice) via launcher.
+# Jalankan: docker compose up --build   lalu buka http://localhost:3000
+services:
+  samar:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      NODE_ENV: production
+      DEMO_MODE: "true"            # demo: akun demo + skenario. Hapus untuk mode ketat.
+      JWT_SECRET: ${JWT_SECRET:-ganti-jwt-secret-demo-minimal-32-karakter-xx}
+      HMAC_MASTER_KEY: ${HMAC_MASTER_KEY:-ganti-master-key-demo-minimal-32-karakter}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-ganti-internal-key-demo-minimal-32-karakter}
+      DATABASE_URL: ${DATABASE_URL:-}   # isi connection string Neon bila ingin pakai database
+    volumes:
+      - ./data:/app/data
