@@ -8,6 +8,15 @@ import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+// Rahasia yang BOLEH dimuat tiap layanan (least privilege). Layanan zona token tidak pernah memuat kunci vault (HMAC) atau JWT.
+const SERVICE_SECRETS = {
+  auth: ['JWT_SECRET', 'INTERNAL_API_KEY'], gateway: ['JWT_SECRET', 'INTERNAL_API_KEY'], privacy: ['HMAC_MASTER_KEY', 'INTERNAL_API_KEY'],
+  claims: ['INTERNAL_API_KEY'], fraud: ['INTERNAL_API_KEY'], notify: ['INTERNAL_API_KEY'], ml: ['INTERNAL_API_KEY'],
+};
+const SERVICE = process.env.SAMAR_SERVICE || '';
+const ALL_SECRETS = ['JWT_SECRET', 'HMAC_MASTER_KEY', 'INTERNAL_API_KEY'];
+const allowedSecrets = () => SERVICE_SECRETS[SERVICE] ?? ALL_SECRETS;
+
 function loadDotEnv(file) {
   if (!fs.existsSync(file)) return;
   for (const raw of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
@@ -18,6 +27,8 @@ function loadDotEnv(file) {
     const key = line.slice(0, i).trim();
     let val = line.slice(i + 1).trim();
     if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
+    if (ALL_SECRETS.includes(key) && !allowedSecrets().includes(key)) continue;
+    if (key.startsWith('DATABASE_URL_') && key !== `DATABASE_URL_${SERVICE.toUpperCase()}`) continue;
     if (process.env[key] === undefined) process.env[key] = val;
   }
 }
@@ -32,15 +43,19 @@ const num = (v, def) => {
   return v === undefined || Number.isNaN(n) ? def : n;
 };
 
-const SECRET_NAMES = ['JWT_SECRET', 'HMAC_MASTER_KEY', 'INTERNAL_API_KEY'];
+// Nilai contoh/default dan rahasia pendek ditolak di production non-demo.
+const WEAK = /ganti|changeme|default|example|contoh|password|secret123/i;
+const assertStrong = (name, v) => {
+  if (v.length < 32 || WEAK.test(v)) throw new Error(`${name} terlalu lemah (minimal 32 karakter dan bukan nilai contoh/default). Buat dengan: npm run gen-secrets. Mode demo (DEMO_MODE=true) boleh memakai nilai default.`);
+};
 
-function resolveSecrets(dataDir, isProd) {
+function resolveSecrets(dataDir, isProd, demoMode) {
   const out = {};
+  const SECRET_NAMES = allowedSecrets();
   const missing = [];
   for (const n of SECRET_NAMES) {
     const v = env(n);
-    if (v) out[n] = v;
-    else missing.push(n);
+    if (v) { if (isProd && !demoMode) assertStrong(n, v); out[n] = v; } else missing.push(n);
   }
   if (!missing.length) return out;
   if (isProd) {
@@ -99,7 +114,7 @@ export function getConfig() {
       auth: urlOf('auth', ports.auth), privacy: urlOf('privacy', ports.privacy),
       claims: urlOf('claims', ports.claims), fraud: urlOf('fraud', ports.fraud), notify: urlOf('notify', ports.notify), ml: urlOf('ml', ports.ml),
     },
-    secrets: resolveSecrets(dataDir, isProd),
+    secrets: resolveSecrets(dataDir, isProd, demoMode),
     store: { driver: storeDriver, dataDir, databaseUrl },
     allowedOrigin: env('ALLOWED_ORIGIN', ''),
     trustProxy: num(env('TRUST_PROXY'), 0),

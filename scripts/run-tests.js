@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dir = path.join(root, 'test');
-const files = fs.readdirSync(dir).filter((f) => f.endsWith('.test.js')).map((f) => path.join(dir, f));
+const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : e.name.endsWith('.test.js') ? [path.join(d, e.name)] : []));
+const files = walk(dir);
 const child = spawn(process.execPath, ['--test', '--test-concurrency=1', ...files], { stdio: 'inherit', cwd: root });
 child.on('exit', (code) => process.exit(code ?? 1));

@@ -123,7 +123,15 @@ export function createPrivacyCore({ mappings, audit, meta, config, policy, clock
 
   // Membuka identitas: hanya peran yang diizinkan, layanan+tujuan PERSIS sama, belum kedaluwarsa/dicabut,
   // di bawah kuota per jam & per hari, dengan alasan tertulis & nomor kasus. Setiap percobaan (berhasil/ditolak) diaudit.
-  async function reidentify({ pseudonym, requesting_service, purpose, actor, case_id, justification, now = clock() }) {
+  // Pemeriksaan kuota + penulisan audit dijalankan serial: tanpa ini permintaan paralel sama-sama lolos cek kuota (balapan).
+  // Kunci ini per proses; untuk beberapa instance Privacy Service perlu advisory lock Postgres (batasan, lihat README).
+  let reidLock = Promise.resolve();
+  function reidentify(args) {
+    const run = reidLock.then(() => reidentifyUnlocked(args));
+    reidLock = run.catch(() => {});
+    return run;
+  }
+  async function reidentifyUnlocked({ pseudonym, requesting_service, purpose, actor, case_id, justification, now = clock() }) {
     const base = { ts_ms: now, action: 'REIDENTIFY', requesting_service, purpose, pseudonym, actor: actor.id, actor_role: actor.role, case_id };
     const deny = async (reason, status = 403, code = 'REIDENTIFY_DENIED', subject_ref) => {
       await appendChained({ ...base, status: 'DENIED', reason, justification_len: justification.length, subject_ref });

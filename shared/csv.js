@@ -20,8 +20,11 @@ export function parseCsv(text) {
   return body.map((r) => Object.fromEntries(cols.map((k, i) => [k, r[i] ?? ''])));
 }
 
+// Sel teks berawalan = + - @ (atau tab/CR) dianggap rumus oleh Excel/Sheets: diberi awalan apostrof (CSV injection).
+const FORMULA_START = /^[=+\-@\t\r]/;
 const esc = (v) => {
-  const s = v === null || v === undefined ? '' : String(v);
+  let s = v === null || v === undefined ? '' : String(v);
+  if (typeof v === 'string' && FORMULA_START.test(s)) s = `'${s}`;
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 export const toCsv = (rows, cols) => `${[cols.join(','), ...rows.map((r) => cols.map((c) => esc(r[c])).join(','))].join('\n')}\n`;

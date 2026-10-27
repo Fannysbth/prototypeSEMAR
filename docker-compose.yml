@@ -5,7 +5,7 @@ services:
   db:
     image: postgres:16
     environment: { POSTGRES_USER: samar, POSTGRES_PASSWORD: samar, POSTGRES_DB: samar }
-    ports: ["5433:5432"]
+    # Port db TIDAK dibuka ke host. Untuk npm start di host: docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d db
     volumes: ["pgdata:/var/lib/postgresql/data"]
   ml:
     build: { context: ., dockerfile: Dockerfile.ml }

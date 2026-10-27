@@ -27,3 +27,26 @@ Spesifikasi menang atas prototype; perubahan perilaku dan tes yang disesuaikan:
 - Web: halaman Evaluasi (auditor dan admin), simulasi dampak dengan tiga skenario, daftar kasus diurutkan menurut skor dan tidak lagi menampilkan teks "null". Screenshot di `docs/screens/`.
 - README ditulis ulang; blok hasil diisi otomatis dari `reports/metrics.json` oleh `npm run readme` (juga dipanggil `npm run evaluate`).
 - Docker: image `ml` dibangun dan dijalankan sendiri (model siap). `docker compose up` penuh belum diuji ujung ke ujung.
+
+## Pemeriksaan keamanan (27 Okt 2026)
+Cakupan: `git diff 8eca474..HEAD` (111 berkas) ditambah pemeriksaan seluruh repo dan riwayat git. `/security-review` bawaan tidak bisa dijalankan (repo tanpa remote, `origin/HEAD` tidak ada), jadi tinjauan dilakukan manual per butir daftar pemeriksaan; `/code-review` belum dijalankan terpisah. Tiap temuan nyata punya tes di `test/security/` yang ditulis gagal dulu. Hasil: 16 temuan (High 4, Medium 7, Low 5); 11 diperbaiki, 5 dicatat sebagai batasan.
+
+Diperbaiki:
+- High: `body-parser` (DoS, advisory GHSA-27r3-jxmh-p828) lewat `npm audit fix`; `zod` 3 ke 4.6.7 (GHSA-mrhx-c7xc-m3w5). `npm audit` kini 0 kerentanan, semua tes lama lulus tanpa perubahan.
+- High: layanan zona token (claims, fraud, notify, ml) mewarisi seluruh env, termasuk `HMAC_MASTER_KEY` (kunci vault) dan `JWT_SECRET`, dan `.env` dimuat penuh oleh tiap layanan. Kini `shared/config.js` memuat hanya rahasia yang dibutuhkan per layanan (`SAMAR_SERVICE`) dan `scripts/stack.js` memangkas env tiap proses anak (`serviceEnv`). Mendukung `DATABASE_URL_<LAYANAN>` agar tiap layanan memakai peran DB sendiri.
+- High: kuota reveal bisa dilewati dengan permintaan paralel (cek kuota dan tulis audit tidak atomik). Kini serial (`reidentify` di `services/privacy/core.js`); 12 permintaan paralel dengan kuota 3 menghasilkan tepat 3 berhasil dan rantai audit tetap valid.
+- Medium: CSV injection pada ekspor (`cases.csv`, `scores.csv`, dll.): sel teks berawalan `= + - @ tab CR` diberi awalan apostrof (`shared/csv.js`).
+- Medium: keluaran LLM tidak disaring. Kini tag HTML dan karakter kontrol dibuang, panjang dibatasi 1.200 karakter, penyaring PII dijalankan juga pada keluaran (PII, dan teks diganti templat), prompt membungkus data kasus dalam `<data_kasus>` dan menyatakannya data tidak tepercaya. Keluaran LLM hanya teks penjelasan dan tidak pernah memengaruhi skor, status, atau aksi.
+- Medium: production non-demo kini menolak start bila rahasia kurang dari 32 karakter atau berupa nilai contoh/default (`ganti-...`); `DEMO_MODE=true` tetap boleh, dan itu satu-satunya jalur default di `docker-compose.yml`.
+- Medium: port Postgres dipublikasikan ke host. Kini tidak; untuk `npm start` di host pakai `docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d db` (hanya loopback). Perintah `docker compose up -d db` di CLAUDE.md tidak lagi membuka port 5433 ke host.
+- Medium: tidak ada `.dockerignore` (`.env`, `data/`, `.git` bisa masuk image). Ditambahkan.
+- Low: `Dockerfile.ml` berjalan sebagai root; kini user `samar`. `services/ml/requirements.txt` dikunci ke versi pasti (`pip-audit`: tidak ada kerentanan).
+
+Dikonfirmasi aman (tes ditambahkan, tanpa perubahan kode): IDOR batch/klaim antar faskes dan unggah atas nama faskes lain; RBAC untuk setiap operasi di `docs/openapi.yaml` (tes gagal bila operasi baru tanpa aturan peran); header keamanan (CSP, nosniff, frame, referrer) dan CORS tertutup; respons error tanpa NIK, nama, atau stack trace; batas ukuran JSON dan jenis unggahan; kunci antar-layanan timing-safe; rate limit login dan `/verify`; kata sandi scrypt dengan perbandingan timing-safe; tidak ada `innerHTML`, `eval`, atau eksekusi shell dari input; tidak ada rahasia atau data riil di riwayat git (contoh `postgresql://...` hanya placeholder; `3273011234567890` di tes adalah angka karangan untuk menguji penolakan NIK riil).
+
+Tidak diperbaiki (batasan):
+- Medium: serialisasi reveal dan rantai audit memakai kunci dalam satu proses; beberapa instance Privacy Service butuh advisory lock Postgres.
+- Medium: di mode Postgres, tanpa `DATABASE_URL_<LAYANAN>` semua layanan memakai satu kredensial DB. Penegakan penuh butuh peran DB per skema yang dibuat operator. Di mode pengembangan `data/.secrets.json` terbaca semua proses lokal.
+- Low: evidence card dimuat iframe dengan token sesi di query string (`access_token`), yang bisa tercatat di riwayat browser atau log proxy; JWT berumur 15 menit dan rutenya hanya baca.
+- Low: lalu lintas antar-layanan HTTP tanpa mTLS (loopback atau jaringan Docker internal).
+- Low: JWT HS256 tanpa daftar pencabutan (mengandalkan umur 15 menit); dependensi Python transitif tidak dikunci dengan hash.

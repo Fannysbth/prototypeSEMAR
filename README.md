@@ -25,7 +25,7 @@ Akun demo (tombol di halaman login; kata sandi `demo-<nama>`): `rs.melati` (fask
 Berkas unggah demo: `demo/fkrtl_batch_november_RS-A.csv` dan `demo/fkrtl_batch_november_RS-B.csv` (akun faskes hanya boleh mengunggah baris faskesnya sendiri). `demo/fkrtl_batch_november.csv` berisi keduanya dan dapat diunggah oleh verifikator. Kasus phantom billing dan cloning lintas 2 RS baru terlihat lengkap setelah kedua faskes mengunggah.
 
 Opsi lain:
-- **Postgres**: `docker compose up -d db`, isi `DATABASE_URL` di `.env`, lalu `npm start`. Tanpa `DATABASE_URL`, data disimpan di folder `data/`.
+- **Postgres**: `docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d db`, isi `DATABASE_URL` di `.env`, lalu `npm start`. Tanpa `DATABASE_URL`, data disimpan di folder `data/`.
 - **Docker penuh**: jalankan `npm run demo:reset` lebih dulu (membuat `services/ml/data/train.csv` yang di-mount ke kontainer ml), lalu `docker compose up --build`. Layanan ml berjalan di kontainer Python terpisah (`Dockerfile.ml`), jadi `ML_ENABLED=true`. Jika berkas latih tidak ada, kontainer ml hidup tetapi model belum siap dan gateway memakai aturan saja.
 - **Swagger**: http://localhost:3000/docs (kontrak di `docs/openapi.yaml`).
 
@@ -94,6 +94,16 @@ Laporan lengkap: `reports/evaluation.md`. Kartu data: `reports/data-card.md`. Ha
 - Mode Docker: image ml dibangun dan diuji sendiri (model siap, versi sama dengan ml lokal). `docker compose up` penuh (db + samar + ml) belum saya jalankan ujung ke ujung. Mode ini tidak dipakai untuk pengukuran evaluasi.
 - Token berlaku dalam satu epoch (default 30 hari); rotasi memutus tautan lintas epoch. Privacy Service adalah titik terpusat (roadmap: KMS/HSM, persetujuan dua orang untuk reveal).
 - Dipotong dari T2: modul faskes cek mandiri, ekspor PDF (cukup CSV), persetujuan kedua reveal, webhook notify.
+
+## Pemeriksaan keamanan
+
+Tinjauan 27 Okt 2026 atas seluruh perubahan sejak prototype awal: 16 temuan (High 4, Medium 7, Low 5), 11 diperbaiki, 5 dicatat sebagai batasan. Rincian dan tesnya ada di `docs/CHANGELOG.md` dan `test/security/` (jalankan `npm test`).
+
+Diperbaiki, antara lain: layanan zona token tidak lagi memegang kunci vault atau JWT; kuota reveal aman dari permintaan paralel; ekspor CSV di-escape terhadap injeksi rumus; keluaran LLM disanitasi dan disaring PII; production non-demo menolak rahasia kosong, pendek, atau default; port db tidak dibuka ke host; image non-root dengan `.dockerignore`; `npm audit` dan `pip-audit` bersih.
+
+Batasan yang tersisa: kunci reveal dan audit berlaku per proses (satu instance Privacy Service); tanpa `DATABASE_URL_<LAYANAN>` semua layanan berbagi satu kredensial DB; token sesi lewat query string untuk iframe evidence card; lalu lintas antar-layanan tanpa mTLS; JWT tanpa daftar pencabutan. Ini bukan audit keamanan independen, dan `/code-review` terpisah belum dijalankan.
+
+Untuk `npm start` di host dengan Postgres: `docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d db` (port 5433 hanya di loopback).
 
 ## Status integrasi
 

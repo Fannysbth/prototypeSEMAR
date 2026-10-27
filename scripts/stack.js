@@ -30,6 +30,24 @@ async function waitHealthy(url, child, name, timeoutMs) {
   throw new Error(`Layanan "${name}" tidak siap dalam ${Math.round(timeoutMs / 1000)} detik.`);
 }
 
+// Env tiap proses anak dipangkas: tiap layanan hanya memegang rahasia yang dibutuhkan (zona token tanpa HMAC/JWT)
+// dan, bila ada, DATABASE_URL_<LAYANAN> miliknya sendiri (peran DB terbatas pada skemanya).
+const DROP = {
+  auth: ['HMAC_MASTER_KEY'], gateway: ['HMAC_MASTER_KEY'], privacy: ['JWT_SECRET'],
+  claims: ['HMAC_MASTER_KEY', 'JWT_SECRET'], fraud: ['HMAC_MASTER_KEY', 'JWT_SECRET'], notify: ['HMAC_MASTER_KEY', 'JWT_SECRET'],
+  ml: ['HMAC_MASTER_KEY', 'JWT_SECRET', 'DATABASE_URL', 'LLM_API_KEY'],
+};
+export function serviceEnv(name, env = process.env) {
+  const out = { ...env };
+  for (const k of DROP[name] ?? []) delete out[k];
+  if (name !== 'gateway') delete out.LLM_API_KEY;
+  const own = env[`DATABASE_URL_${name.toUpperCase()}`];
+  for (const k of Object.keys(out)) if (k.startsWith('DATABASE_URL_')) delete out[k];
+  if (own) out.DATABASE_URL = own;
+  out.SAMAR_SERVICE = name;
+  return out;
+}
+
 export async function startStack({ env = {}, quiet = false, timeoutMs = 90000, onCrash } = {}) {
   Object.assign(process.env, env);
   const config = getConfig();
@@ -37,7 +55,7 @@ export async function startStack({ env = {}, quiet = false, timeoutMs = 90000, o
   let stopping = false;
 
   const launch = (svc) => {
-    const child = spawn(process.execPath, [path.join(ROOT, svc.file)], { cwd: ROOT, env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [path.join(ROOT, svc.file)], { cwd: ROOT, env: serviceEnv(svc.name), stdio: ['ignore', 'pipe', 'pipe'] });
     if (!quiet) {
       child.stdout.on('data', (d) => process.stdout.write(d));
       child.stderr.on('data', (d) => process.stderr.write(d));
@@ -50,7 +68,7 @@ export async function startStack({ env = {}, quiet = false, timeoutMs = 90000, o
   };
 
   const launchMl = () => {
-    const child = spawn(pythonBin(), ['-m', 'uvicorn', 'app:app', '--host', '127.0.0.1', '--port', String(config.ports.ml), '--log-level', 'warning'], { cwd: path.join(ROOT, 'services', 'ml'), env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(pythonBin(), ['-m', 'uvicorn', 'app:app', '--host', '127.0.0.1', '--port', String(config.ports.ml), '--log-level', 'warning'], { cwd: path.join(ROOT, 'services', 'ml'), env: serviceEnv('ml'), stdio: ['ignore', 'pipe', 'pipe'] });
     child.on('error', () => {});
     if (!quiet) { child.stdout.on('data', (d) => process.stdout.write(d)); child.stderr.on('data', (d) => process.stderr.write(d)); } else { child.stdout.resume(); child.stderr.resume(); }
     children.push({ svc: { name: 'ml' }, child });

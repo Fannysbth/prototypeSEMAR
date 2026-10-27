@@ -6,6 +6,8 @@ WORKDIR /app
 COPY services/ml/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY services/ml/app.py services/ml/models.py ./
+RUN useradd --system --no-create-home samar
+USER samar
 ENV ML_TRAIN_CSV=/app/data/train.csv
 EXPOSE 4106
 CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "4106", "--log-level", "warning"]
