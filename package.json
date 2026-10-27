@@ -16,7 +16,9 @@
     "gen-secrets": "node scripts/gen-secrets.js",
     "generate-data": "node scripts/generate-data/index.js",
     "demo:reset": "node scripts/demo-reset.js",
-    "train-data": "node scripts/build-training-set.js"
+    "train-data": "node scripts/build-training-set.js",
+    "readme": "node scripts/render-readme.js",
+    "report": "node scripts/render-report.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

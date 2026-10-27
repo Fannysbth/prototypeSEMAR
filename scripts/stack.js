@@ -20,7 +20,7 @@ const pythonBin = () => ['Scripts/python.exe', 'bin/python'].map((p) => path.joi
 async function waitHealthy(url, child, name, timeoutMs) {
   const t0 = Date.now();
   while (Date.now() - t0 < timeoutMs) {
-    if (child.exitCode !== null) throw new Error(`Layanan "${name}" berhenti saat start (kode ${child.exitCode}). Lihat log di atas.`);
+    if (child && child.exitCode !== null) throw new Error(`Layanan "${name}" berhenti saat start (kode ${child.exitCode}). Lihat log di atas.`);
     try {
       const r = await fetch(url, { signal: AbortSignal.timeout(1500) });
       if (r.ok) return;
@@ -70,7 +70,8 @@ export async function startStack({ env = {}, quiet = false, timeoutMs = 90000, o
 
   try {
     if (config.mlEnabled) {
-      const ml = launchMl();
+      // ML_URL diisi (mis. di Docker: layanan ml di kontainer lain) -> jangan jalankan ml lokal.
+      const ml = process.env.ML_URL ? null : launchMl();
       waitHealthy(`${config.urls.ml}/health`, ml, 'ml', 60000).catch(() => { if (!quiet) console.warn('[ml] tidak siap; deteksi berjalan dengan aturan saja (skor ML = 0, ditandai "ml tidak tersedia")'); });
     }
     const backend = SERVICES.filter((s) => s.name !== 'gateway');

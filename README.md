@@ -1,189 +1,119 @@
-# SAMAR — Prototipe Healthkathon 2026
+# SAMAR
 
-**Samarkan Identitas, Perluas Deteksi.**
-Arsitektur Privacy-by-Design berbasis **pseudonimisasi dinamis** sebagai *enabler* deteksi kecurangan klaim **lintas-faskes** pada layanan kesehatan JKN.
-Kategori lomba: **Efisiensi Risiko pada Fasilitas Kesehatan** · modus: Cloning, Self-referral, Phantom billing, Upcoding, Unbundling, Repeat billing, Prolonged LOS.
+Deteksi fraud klaim JKN lintas faskes di atas data terpseudonimisasi. Dibangun dari prototype v2 (Node.js, 6 layanan) untuk Healthkathon 2026.
 
-> Seluruh data adalah **sintetis** (NIK berawalan `9999` = kode provinsi yang tidak ada). Sistem menolak NIK riil secara default (`SYNTHETIC_ONLY=true`), sesuai aturan lomba.
+SAMAR **tidak memutuskan fraud**. Keluarannya skor, alasan, dan prioritas review untuk verifikator. Model melihat riwayat lintas rumah sakit lewat token, dan tidak pernah melihat nama atau NIK.
 
----
+> Semua data sintetis (NIK berawalan `9999`). Tidak ada data peserta JKN riil dan tidak ada data sampel resmi BPJS di repo ini. Sistem menolak NIK riil (`SYNTHETIC_ONLY=true`).
 
-## 1. Mulai cepat (3 langkah, tanpa Docker, tanpa database)
+## Cara jalan
 
-Prasyarat: **Node.js 20 atau lebih baru** (cek: `node -v`; unduh di https://nodejs.org).
+Prasyarat: Node.js 20+, Python 3.10+ (untuk layanan ml; tanpa Python sistem tetap jalan dengan detektor aturan saja).
 
-```bash
-cd samar-prototype
-npm install
-npm start
-```
-
-Buka **http://localhost:3000**. Klik salah satu tombol akun demo di halaman login. Selesai.
-
-- Semua layanan menyala dalam ±2 detik. Hentikan dengan **Ctrl+C**.
-- Tanpa `DATABASE_URL`, data disimpan di folder `data/` (otomatis). Hapus dengan `npm run reset`.
-- Secret dibuat otomatis saat pertama jalan (disimpan di `data/.secrets.json`). Tidak perlu file `.env`.
-- Bentrok port? Ubah `PORT=3001 npm start` (Windows PowerShell: `$env:PORT=3001; npm start`), atau isi `.env`.
-
-Akun demo (juga muncul sebagai tombol di halaman login):
-
-| Peran | Username | Password |
-|---|---|---|
-| Faskes (4 RS) | `rs.melati`, `rs.kenanga`, `rs.cempaka`, `rs.anggrek` | `demo-melati`, `demo-kenanga`, `demo-cempaka`, `demo-anggrek` |
-| Verifikator BPJS | `verifikator` | `demo-verifikator` |
-
-## 2. Perintah
-
-| Perintah | Fungsi |
+| Langkah | Perintah |
 |---|---|
-| `npm start` | Menyalakan Gateway + UI + 5 microservice |
-| `npm test` | 39 tes otomatis (unit + e2e dengan layanan sungguhan). ±10 detik |
-| `npm run evaluate` | Evaluasi terukur baseline vs SAMAR → `reports/evaluation.md/json` (juga tampil di tab *Hasil Evaluasi*). ±20 detik |
-| `npm run reset` | Hapus data lokal. `npm run reset:neon` menghapus skema `samar_*` di Neon |
-| `npm run gen-secrets` | Membuat 3 secret acak untuk production |
+| 1. Pasang dependensi Node | `npm install` |
+| 2. Pasang dependensi ml | `cd services/ml && pip install -r requirements.txt` |
+| 3. Siapkan data demo dan data latih model | `npm run demo:reset` |
+| 4. Jalankan semua layanan | `npm start` (buka http://localhost:3000) |
+| 5. Jalankan tes | `npm test` |
+| 6. Jalankan evaluasi (membuat `reports/`) | `npm run evaluate` (sekitar 10-15 menit) |
+| 7. Perbarui angka di README dari `reports/metrics.json` | `npm run readme` |
 
-## 3. Arsitektur
+Akun demo (tombol di halaman login; kata sandi `demo-<nama>`): `rs.melati` (faskes RS-A; juga `rs.kenanga`, `rs.cempaka`, `rs.anggrek`), `verifikator`, `auditor`, `admin`.
 
-```
-Browser (UI) ──► API Gateway ─────────────┬─► Auth Service        (login, JWT, peran)
- (disajikan Gateway)  JWT, validasi,      │
-                      rate-limit, CSP     ├─► Privacy Service     (SATU-SATUNYA yang menerima data mentah)
-                                          │     kebijakan minimisasi · token dinamis · vault AES-GCM · audit
-                                          ├─► Claim Processing    (hanya token + atribut klaim)
-                                          ├─► Fraud Detection     (hanya token lintas-faskes + atribut klinis)
-                                          └─► Notification        (hanya petunjuk tersamar ****1234)
-```
+Berkas unggah demo: `demo/fkrtl_batch_november_RS-A.csv` dan `demo/fkrtl_batch_november_RS-B.csv` (akun faskes hanya boleh mengunggah baris faskesnya sendiri). `demo/fkrtl_batch_november.csv` berisi keduanya dan dapat diunggah oleh verifikator. Kasus phantom billing dan cloning lintas 2 RS baru terlihat lengkap setelah kedua faskes mengunggah.
 
-- Tiap layanan = **proses terpisah**, komunikasi lewat HTTP dengan `x-internal-key`; layanan internal hanya mendengarkan `127.0.0.1`.
-- Tiap layanan memiliki **penyimpanan sendiri** (namespace/skema Postgres terpisah: `samar_privacy`, `samar_claims`, `samar_fraud`, `samar_notify`).
-- **Satu kode, dua mode.** Hanya `services/gateway/pipeline.js` yang membedakan mode:
-  `baseline` (payload mentah ke semua layanan) vs `proposed` (lewat Privacy Service dulu). Kode Claim/Fraud/Notification **identik** di kedua mode, sehingga selisih privasi/kinerja murni akibat lapisan SAMAR.
+Opsi lain:
+- **Postgres**: `docker compose up -d db`, isi `DATABASE_URL` di `.env`, lalu `npm start`. Tanpa `DATABASE_URL`, data disimpan di folder `data/`.
+- **Docker penuh**: jalankan `npm run demo:reset` lebih dulu (membuat `services/ml/data/train.csv` yang di-mount ke kontainer ml), lalu `docker compose up --build`. Layanan ml berjalan di kontainer Python terpisah (`Dockerfile.ml`), jadi `ML_ENABLED=true`. Jika berkas latih tidak ada, kontainer ml hidup tetapi model belum siap dan gateway memakai aturan saja.
+- **Swagger**: http://localhost:3000/docs (kontrak di `docs/openapi.yaml`).
 
-### Apa yang diterima tiap layanan (mode SAMAR)
-
-| Layanan | Menerima | Tidak pernah menerima |
-|---|---|---|
-| Claim Processing | `patient_token`, `record_token`, `age_band`, diagnosis, tindakan, tanggal, lama rawat, nominal | NIK, nama, telepon, tgl lahir, no. RM |
-| Fraud Detection | `fraud_ref` (token lintas-faskes) + atribut klinis/klaim | semua identitas langsung |
-| Notification | `patient_hint` (`************1234`) + ID klaim | NIK lengkap, nama |
-
-Kebijakan ini ditulis sebagai kode di `services/privacy/policy.js` (default-deny: field yang tidak tercantum tidak pernah diteruskan) dan bisa dilihat di UI (tab *Inspektur Data*).
-
-## 4. Pseudonimisasi dinamis — cara kerja
+## Arsitektur singkat
 
 ```
-pseudonim = HMAC( HMAC(master_key, epoch) , layanan | tujuan | subjek )
+Browser (web/) -> Gateway -+-> Auth
+                           +-> Privacy (satu-satunya yang menerima data pribadi; vault AES-GCM; audit berantai hash)
+                           +-> Claims  --+
+                           +-> Fraud ----+-- hanya token + atribut klaim
+                           |     +-> ml (Python: Isolation Forest + Gradient Boosting)
+                           +-> Notify
 ```
 
-| Sifat | Mekanisme | Manfaat |
-|---|---|---|
-| **Konsisten lintas-faskes** | faskes *tidak* ikut dalam rumus | pasien yang sama → token sama di RS manapun → pencocokan Cloning/Self-referral mungkin tanpa membuka identitas |
-| **Berbeda per layanan & tujuan** | `layanan` dan `tujuan` ikut dalam HMAC | token Claim Service tak bisa dipakai di Fraud Service (least privilege) |
-| **Berotasi (dinamis)** | kunci per-`epoch` (default 30 hari) | token kedaluwarsa & berganti otomatis; kebocoran satu epoch tidak membuka epoch lain |
-| **Vault terenkripsi** | identitas asli disimpan AES-256-GCM (kunci turunan HKDF) | dump database tidak membuka NIK |
-| **Audit tanpa PII** | log hanya memuat `subject_ref` (HMAC), bukan NIK | audit aman dibagikan |
-| **Re-identifikasi terkontrol** | peran `verifier` + layanan & tujuan **persis sama** + belum kedaluwarsa/dicabut + alasan ≥20 karakter + nomor kasus + **kuota/jam** | mencegah pembukaan massal oleh orang dalam; semua percobaan diaudit |
-| **Hak subjek (UU PDP)** | `revoke` menghapus vault (crypto-shredding) | identitas tak bisa dibuka lagi |
+- **Zona data pribadi**: gateway, privacy, vault. **Zona token**: claims, fraud, ml, notify. Tes `zone-leak` memastikan tidak ada PII yang sampai ke zona token.
+- **Token** konsisten lintas faskes (faskes tidak ikut dalam rumus), berbeda per layanan dan tujuan, dan berotasi per epoch.
+- **Deteksi**: 7 detektor aturan + Isolation Forest + model supervised, digabung dengan noisy-OR (`config/weights.json`). Skor >= 45 membuat kasus. Fitur lintas faskes dihitung per token (`services/fraud/engine.js`).
+- **Penjelasan**: LLM hanya menerima token, kode diagnosis, angka, dan alasan detektor, setelah penyaring PII. Tanpa `LLM_API_KEY` atau saat LLM gagal, dipakai templat aturan (`explanation_source` menunjukkan sumbernya).
+- **Manusia memutuskan**: status kasus, reveal identitas (auditor, wajib alasan, ada kuota), revoke (admin), dan ubah ambang tercatat di audit log.
+- Spesifikasi lengkap ada di `docs/` (mulai dari `docs/01-prd.md` dan `docs/02-arsitektur.md`).
 
-## 5. Deteksi kecurangan (dapat dijelaskan + human-in-the-loop)
+## Hasil evaluasi
 
-| Modus | Sinyal (hanya token + atribut klinis) |
+<!-- HASIL:START -->
+Sumber: `reports/metrics.json` (dibuat 2026-10-27 oleh `npm run evaluate`). 3 seed x fraud rate 1%/3% x 2 tingkat kesulitan; latih bulan 1-4, uji bulan 5-6; kapasitas review 1% klaim (asumsi). Angka = rerata (min-maks) antar 6 run per tingkat.
+
+**Set hard (skenario lebih sulit, angka utama):**
+
+| Varian | precision@1% | recall@1% | rupiah recall@1% | PR-AUC | ROC-AUC |
+|---|---|---|---|---|---|
+| SAMAR lengkap | 83.8% (47.6% - 100.0%) | 57.4% (33.3% - 85.0%) | 54.8% (23.8% - 85.1%) | 0.786 | 0.914 |
+| Tanpa ML (aturan saja) | 70.9% (38.1% - 95.2%) | 46.7% (29.3% - 75.0%) | 45.6% (26.4% - 73.5%) | 0.553 | 0.787 |
+| Tanpa aturan (ML saja) | 82.2% (47.6% - 100.0%) | 56.9% (30.2% - 85.0%) | 51.9% (19.1% - 85.1%) | 0.733 | 0.906 |
+| Tanpa fitur lintas faskes | 75.6% (38.1% - 100.0%) | 48.5% (33.3% - 66.7%) | 45.2% (24.0% - 68.7%) | 0.561 | 0.773 |
+
+**Set standar (pola fraud mirip generator; cenderung optimistis):**
+
+| Varian | precision@1% | recall@1% | rupiah recall@1% | PR-AUC | ROC-AUC |
+|---|---|---|---|---|---|
+| SAMAR lengkap | 87.0% (60.0% - 100.0%) | 69.4% (37.5% - 100.0%) | 75.7% (45.4% - 100.0%) | 1.000 | 1.000 |
+| Tanpa ML (aturan saja) | 87.0% (60.0% - 100.0%) | 69.4% (37.5% - 100.0%) | 75.7% (45.6% - 100.0%) | 1.000 | 1.000 |
+| Tanpa aturan (ML saja) | 81.3% (47.6% - 100.0%) | 61.8% (37.5% - 91.7%) | 59.8% (24.6% - 96.3%) | 0.857 | 0.926 |
+| Tanpa fitur lintas faskes | 76.3% (40.0% - 100.0%) | 54.8% (37.5% - 71.4%) | 67.9% (43.4% - 96.7%) | 0.672 | 0.843 |
+
+- Ablasi: baris "Tanpa fitur lintas faskes", "Tanpa ML", dan "Tanpa aturan" membandingkan kontribusi tiap komponen terhadap SAMAR lengkap.
+- Modus hold-out REPEAT_BILLING (tidak dipakai melatih model supervised), recall pada ambang kasus: SAMAR lengkap 100.0% (n=27, CI95 87.5%-100.0%) (standar) dan 0.0% (n=37, CI95 0.0%-9.4%) (hard); **ML saja** 0.0% (n=27, CI95 0.0%-12.5%) (standar) dan 0.0% (n=37, CI95 0.0%-9.4%) (hard).
+- Paritas deteksi baseline vs SAMAR: 387/387 klaim identik (100.0%). Payload di zona token yang memuat data pribadi: 100% menjadi 0%.
+- Latensi POST /verify p95 22.1 ms; throughput unggah CSV 153.3 baris/detik (satu mesin, penyimpanan memori).
+- Keamanan: 23/23 percobaan akses tidak sah ditolak; fungsional 9/9 lulus.
+- Evidence card eval-kit: `reports/evidence.html` dan `reports/evidence-hard.html` (6 butir keterbatasan otomatis dari kit, lihat `reports/evaluation.md`).
+
+> PR-AUC rata-rata >= 0,95: ini dibaca sebagai bukti mekanisme (pola fraud di generator dan detektor sejalan), bukan akurasi pada data nyata. Lihat set hard.
+
+<!-- HASIL:END -->
+
+Laporan lengkap: `reports/evaluation.md`. Kartu data: `reports/data-card.md`. Halaman *Evaluasi* di web (auditor dan admin) menampilkan metrik, ablasi, hold-out, perbandingan tanpa/dengan SAMAR, dan evidence card.
+
+## Batasan yang jujur
+
+- **Data sintetis, label dari generator.** Angka membuktikan mekanisme, bukan akurasi pada data JKN riil. Generator dan detektor ditulis oleh pihak yang sama; set standar cenderung optimistis. Karena itu set hard (fraud lebih halus, hard negatives tambahan, satu modus tanpa detektor aturan) ditampilkan berdampingan.
+- **Kapasitas review 1% klaim adalah asumsi**, bukan kapasitas verifikator BPJS. Pada fraud rate 3% recall@1% dibatasi oleh kapasitas.
+- **Recall per modus di set hard tinggi sebagian karena model supervised dilatih dari label generator yang sama.** Ukuran generalisasi yang lebih jujur adalah modus hold-out; hasilnya rendah (lihat blok hasil), dan penyebabnya dijelaskan di `reports/evaluation.md`.
+- **Jumlah fraud di set uji kecil** (puluhan per run), sehingga selang kepercayaan lebar. Recall modus hold-out dihitung dari gabungan 6 run.
+- **Simulasi dampak rupiah** memakai rupiah recall dari evaluasi dan biaya pilot dari `docs/07-model-bisnis.md`. Fraud rate, recovery rate, dan nilai klaim cabang adalah asumsi. Itu bukan penghematan nyata.
+- Latensi dan throughput diukur di satu mesin, penyimpanan memori, tanpa LLM eksternal.
+- Mode Docker: image ml dibangun dan diuji sendiri (model siap, versi sama dengan ml lokal). `docker compose up` penuh (db + samar + ml) belum saya jalankan ujung ke ujung. Mode ini tidak dipakai untuk pengukuran evaluasi.
+- Token berlaku dalam satu epoch (default 30 hari); rotasi memutus tautan lintas epoch. Privacy Service adalah titik terpusat (roadmap: KMS/HSM, persetujuan dua orang untuk reveal).
+- Dipotong dari T2: modul faskes cek mandiri, ekspor PDF (cukup CSV), persetujuan kedua reveal, webhook notify.
+
+## Status integrasi
+
+Semua integrasi di bawah ini **rencana, belum terhubung**. Prototype berdiri sendiri dan tidak memanggil sistem BPJS mana pun.
+
+| Sistem | Status |
 |---|---|
-| Self-referral | token yang sama di ≥2 faskes dalam 7 hari (≥3 = risiko tinggi) |
-| Phantom billing | periode layanan tumpang-tindih di dua faskes (mustahil fisik) |
-| Cloning | ≥3 klaim identik (dx, tindakan, lama rawat, nominal) dari pasien berbeda di satu faskes |
-| Upcoding | nominal vs referensi per diagnosis (rasio & robust z-score median/MAD) |
-| Unbundling | klaim kecil berulang yang jumlahnya = satu paket |
-| Repeat billing | klaim identik ditagih ulang ≤30 hari |
-| Prolonged LOS | lama rawat melebihi batas wajar diagnosis |
-| + **Isolation Forest** | ML tanpa label (karena label fraud tidak tersedia) pada 7 fitur non-identitas; pelengkap untuk pola tak dikenal |
+| Voltage (mesin token BPJS) | rencana, belum terhubung; token saat ini dari HMAC lokal |
+| VClaim / Smart Claim | rencana, belum terhubung; `POST /verify` dirancang sebagai titik tempel |
+| JKN Data Hub | rencana, belum terhubung |
+| SATUSEHAT, INA-CBG resmi | tidak tercakup; tarif referensi bersifat ilustratif |
 
-Skor akhir = *noisy-OR* seluruh sinyal → `NONE/LOW/MEDIUM/HIGH`. Skor ≥45 membuat **kasus**; setiap kasus menampilkan alasan + bukti. Sistem **hanya memberi sinyal**; keputusan (terkonfirmasi / bukan fraud / butuh info) ada pada verifikator.
-
-## 6. Memakai Neon (opsional)
-
-Database **tidak wajib**. Pakai Neon bila ingin data tetap ada saat deploy.
-
-1. Buat project di https://neon.tech → buka **Connection Details** → salin connection string (`postgresql://...?sslmode=require`).
-2. Salin `.env.example` menjadi `.env`, isi `DATABASE_URL=<connection string>`.
-3. `npm start`. Terminal akan menampilkan `Penyimpanan : POSTGRES / NEON`.
-
-Tabel dibuat otomatis (tidak perlu menjalankan SQL). Kamu akan melihat skema `samar_privacy`, `samar_claims`, `samar_fraud`, `samar_notify` di Neon. Koneksi pertama ke Neon yang sedang "tidur" bisa butuh beberapa detik (sudah ada retry otomatis). Kosongkan `DATABASE_URL` untuk kembali ke mode tanpa database.
-
-> Adapter Postgres diuji terhadap Postgres sungguhan (tes store + tes e2e penuh), tetapi **tidak** diuji langsung ke akun Neon milikmu karena tidak ada akses ke sana dari lingkungan pengembangan.
-
-## 7. Deploy
-
-### Railway (disarankan: satu service)
-Launcher menjalankan semua layanan di satu kontainer; hanya Gateway yang terbuka ke publik.
-
-1. Push folder ini ke GitHub → Railway **New Project → Deploy from GitHub repo**.
-2. Tab **Variables**:
-
-| Variable | Nilai |
-|---|---|
-| `NODE_ENV` | `production` |
-| `DEMO_MODE` | `true` (agar akun demo & skenario aktif untuk juri); hapus untuk mode ketat |
-| `JWT_SECRET`, `HMAC_MASTER_KEY`, `INTERNAL_API_KEY` | hasil `npm run gen-secrets` (simpan `HMAC_MASTER_KEY`: mengganti nilainya membuat token lama tak bisa dibuka) |
-| `DATABASE_URL` | connection string Neon (disarankan; tanpa ini data hilang saat redeploy) |
-| `TRUST_PROXY` | `1` |
-
-3. **Settings → Networking → Generate Domain**. Railway otomatis menjalankan `npm start` dan mengisi `PORT`.
-4. UI disajikan Gateway yang sama, jadi **tidak perlu Vercel**. Bila tetap ingin UI di Vercel: deploy folder `services/gateway/public`, isi `window.SAMAR_API_BASE` di `config.js` dengan URL Gateway, dan set `ALLOWED_ORIGIN` di Railway ke domain Vercel.
-
-### Docker (opsional)
-`docker compose up --build` → http://localhost:3000. *(Dockerfile standar; tidak dapat dijalankan di lingkungan pengembangan ini karena tidak ada Docker, jadi belum saya uji.)*
-
-### Mode production ketat
-Tanpa `DEMO_MODE`: akun demo, skenario, Inspektur, dan mode baseline **mati**; semua secret wajib; pengguna dari `AUTH_USERS_JSON` (lihat `.env.example`). Sudah diuji (boot gagal bila secret kosong; endpoint demo 404; baseline 403).
-
-## 8. Konfigurasi
-
-Lihat `.env.example` (semua variabel terdokumentasi). Yang paling sering dipakai: `DATABASE_URL`, `PORT`, `DEMO_MODE`, `TOKEN_TTL_SECONDS`, `REIDENTIFY_MAX_PER_HOUR`.
-
-## 9. Yang perlu kamu periksa/ubah
-
-- [ ] **Sebelum demo:** `npm test` hijau, `npm run evaluate` dijalankan di laptopmu sendiri (angka kinerja bergantung perangkat; laporan contoh di `reports/` dibuat di mesin 1-CPU).
-- [ ] **Sebelum deploy publik:** secret baru dari `npm run gen-secrets`; `DATABASE_URL` Neon; `TRUST_PROXY=1`.
-- [ ] **Nama tim & profil** diisi di slide (bukan di kode).
-- [ ] **Jangan** mengisi `SYNTHETIC_ONLY=false` atau memasukkan data peserta JKN riil.
-- [ ] Akun demo hanya untuk demo. Untuk penggunaan lain, isi `AUTH_USERS_JSON` dan matikan `DEMO_MODE`.
-
-## 10. Batasan (sebut jujur ke juri)
-
-- **Data sintetis.** Angka deteksi (precision/recall 100%) berasal dari data yang dibangkitkan dengan pola yang dikenal detektor: itu membuktikan **mekanisme dan paritas** baseline vs SAMAR, **bukan** akurasi pada data JKN riil. Tarif referensi bersifat ilustratif, bukan INA-CBG.
-- **Isolation Forest dilatih pada data normal sintetis** saat start; di produksi harus dilatih ulang pada riwayat klaim ber-token nyata.
-- **Linkability token dibatasi epoch.** Pencocokan lintas-faskes hanya berlaku dalam satu epoch (default 30 hari); rotasi memutus tautan lintas epoch (ini disengaja: trade-off privasi vs jangkauan analitik).
-- **Overhead nyata:** SAMAR menambah satu hop ke Privacy Service per klaim (pada pengukuran lokal +4 s.d. +6 ms p95; throughput turun 35–40% pada beban uji; bervariasi antar-run). Dengan Neon, latensi absolut kedua mode naik.
-- **Skala:** satu instance per layanan; kunci per-pasien (mutex) bersifat in-process. Untuk skala horizontal perlu antrean/advisory lock Postgres. Pemecahan layanan ke host terpisah didukung via `*_URL` + `INTERNAL_HOST` tetapi **belum diuji** multi-host.
-- **Privacy Service adalah titik terpusat** (single point of failure & target bernilai tinggi). Mitigasi di prototipe: vault terenkripsi, kuota, audit; roadmap: HSM/KMS, replikasi, persetujuan dua-orang (dual control) untuk re-identifikasi.
-- Tidak mencakup Reconciliation Service, integrasi nyata dengan SATUSEHAT/VClaim/INA-CBG, maupun sertifikasi keamanan.
-
-## 11. Struktur folder
+## Struktur
 
 ```
-shared/          config, logger (redaksi PII), http helper, store (memory/file/postgres), data sintetis, referensi
-services/
-  gateway/       API + UI (public/), pipeline baseline/proposed, skema validasi, simulasi
-  privacy/       policy.js (kebijakan), core.js (token, vault, re-identifikasi), index.js (HTTP)
-  fraud/         detectors.js, engine.js, iforest.js (Isolation Forest), index.js
-  claims/ notify/ auth/
-scripts/         dev.js (launcher), stack.js, evaluate.js, reset.js, gen-secrets.js, run-tests.js
-test/            store, privacy.core, fraud.engine, e2e
-reports/         evaluation.md/json (contoh hasil)
-docs/            PANDUAN-DEMO.md, PEMETAAN-KRITERIA.md
+shared/     config, http, store (memory/file/postgres), generator sintetis, metrik evaluasi
+services/   gateway, auth, privacy, claims, fraud, notify, ml (Python)
+web/        frontend tipis (HTML + JS), disajikan gateway
+scripts/    dev, stack, evaluate (+ eval/), generate-data, demo-reset, render-readme
+config/     weights.json, column-map.json, pilot-cost.json
+docs/       spesifikasi, openapi.yaml, CHANGELOG.md, video-cheatsheet.md, screens/
+reports/    keluaran npm run evaluate
 ```
-
-## 12. Troubleshooting
-
-| Gejala | Solusi |
-|---|---|
-| `Node.js ... terlalu lama` | Pasang Node 20+ dari nodejs.org |
-| `Port 3000 sudah dipakai` | `PORT=3001 npm start` (PowerShell: `$env:PORT=3001; npm start`) |
-| Port internal bentrok (4101-4105) | Ubah `AUTH_PORT`, `PRIVACY_PORT`, dst. di `.env` |
-| Layanan "berhenti saat start" | Baca log di atas pesan itu; biasanya port bentrok atau `DATABASE_URL` salah |
-| Koneksi Neon lambat saat pertama | Normal (database tidur). Tunggu beberapa detik; ada retry otomatis |
-| `Environment wajib belum diisi untuk production` | Isi 3 secret: `npm run gen-secrets` |
-| Login 429 | Terlalu banyak login gagal; tunggu 1 menit |
-| Data lama mengganggu demo | `npm run reset` |
-| Tab *Hasil Evaluasi* kosong | Jalankan `npm run evaluate` lalu muat ulang |

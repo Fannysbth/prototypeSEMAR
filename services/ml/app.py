@@ -14,25 +14,16 @@ import numpy as np
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from sklearn.ensemble import GradientBoostingClassifier, IsolationForest
 from sklearn.metrics import average_precision_score, roc_auc_score
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+
+from models import META_COLS, fit, load_rows
 
 TRAIN_CSV = Path(os.environ.get("ML_TRAIN_CSV", Path(__file__).parent / "data" / "train.csv"))
 INTERNAL_KEY = os.environ.get("INTERNAL_API_KEY", "")
-TRAIN_DAYS = 56
-META_COLS = {"claim_ref", "admit_date", "label", "modus", "holdout"}
+TRAIN_DAYS = int(os.environ.get("ML_TRAIN_DAYS", "56"))
 
 app = FastAPI(title="SAMAR ml", docs_url=None, redoc_url=None, openapi_url=None)
 state: dict = {}
-
-
-def load_rows(path: Path):
-    lines = path.read_text(encoding="utf-8").strip().splitlines()
-    head = lines[0].split(",")
-    rows = [dict(zip(head, ln.split(","))) for ln in lines[1:]]
-    return head, rows
 
 
 def train() -> None:
@@ -48,9 +39,7 @@ def train() -> None:
     is_train = np.array([d < cut for d in days])
     is_test = ~is_train
 
-    iforest = IsolationForest(n_estimators=200, random_state=42).fit(X[is_train & (y == 0)])
-    sup_mask = is_train & (hold == 0)
-    sup = make_pipeline(StandardScaler(), GradientBoostingClassifier(random_state=42)).fit(X[sup_mask], y[sup_mask])
+    iforest, sup, sup_mask = fit(X, y, hold, is_train)
     normal = X[is_train & (y == 0)]
 
     metrics = {"n_train": int(sup_mask.sum()), "n_test": int(is_test.sum()), "train_cutoff": cut.isoformat(), "holdout_modus_excluded": True}

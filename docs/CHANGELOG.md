@@ -17,3 +17,13 @@ Spesifikasi menang atas prototype; perubahan perilaku dan tes yang disesuaikan:
 - Dipotong (daftar boleh dipotong di 09-rencana-kerja): ekspor PDF (hanya CSV), persetujuan kedua reveal, notify webhook, modul faskes cek mandiri. Belum ada di T2: halaman evaluasi dan evidence card (T3).
 - UI prototype lama (`services/gateway/public`: inspector data, tombol skenario) dihapus; endpoint demo (`/api/demo/*`) tetap ada karena dipakai tes.
 
+
+## T3 (27 Okt 2026)
+- `npm run evaluate` ditulis ulang: 3 seed x fraud rate 1%/3% x set standar/hard, split waktu (hari 0-119 latih, 120-179 uji), hard negatives, satu modus hold-out (`REPEAT_BILLING`), ablasi (tanpa lintas faskes, tanpa ML, tanpa aturan), bootstrap CI per pasien. Keluaran: `reports/metrics.json`, `evaluation.md`, `data-card.md`, `evalkit/{scores,truth,cases}.csv` (set hard di `evalkit-hard/`), `evidence.html` dan `evidence-hard.html` dari eval-kit. `reports/evaluation.json` lama tidak dibuat lagi; `GET /evaluation/latest` kini mengembalikan `metrics.json` dan hanya untuk auditor dan admin (sebelumnya semua pengguna login).
+- Beda dari spesifikasi 03-api: `POST /impact/simulate` kini memakai `rupiah_recall` sesuai rumus 07-model-bisnis (bentuk lama `review_capacity` + `precision_at_k` tetap diterima). Ditambah `GET /impact/scenarios` (rendah, sedang, tinggi; semua berlabel asumsi), `GET /evaluation/evidence`, dan `config/pilot-cost.json` (biaya pilot Rp11,3 juta per bulan).
+- Generator: parameter `span` dan `difficulty` (`hard`) di `shared/synthetic.js`; modus baru `PROCEDURE_MISMATCH` hanya di set hard (tanpa detektor aturan). Perilaku default (span 80 hari, standar) tidak berubah. `scripts/build-demo-batch.js` juga membuat `demo/fkrtl_batch_november_RS-A.csv` dan `_RS-B.csv`: akun faskes hanya boleh mengunggah baris faskesnya sendiri, sehingga berkas gabungan hanya bisa diunggah verifikator (bug alur ditemukan saat cek UI: 31 dari 40 baris ditolak).
+- `services/ml/models.py` dipisah dari `app.py` (kode pelatihan dipakai bersama evaluator); `ML_TRAIN_DAYS` dapat diatur. `services/fraud/engine.js` mengekspor `mlFlags` dan `combineFlags` (perilaku tidak berubah).
+- Docker: layanan `ml` terpisah (`Dockerfile.ml`) dan `ML_ENABLED=true` pada compose; `scripts/stack.js` tidak menjalankan ml lokal bila `ML_URL` diisi.
+- Web: halaman Evaluasi (auditor dan admin), simulasi dampak dengan tiga skenario, daftar kasus diurutkan menurut skor dan tidak lagi menampilkan teks "null". Screenshot di `docs/screens/`.
+- README ditulis ulang; blok hasil diisi otomatis dari `reports/metrics.json` oleh `npm run readme` (juga dipanggil `npm run evaluate`).
+- Docker: image `ml` dibangun dan dijalankan sendiri (model siap). `docker compose up` penuh belum diuji ujung ke ujung.

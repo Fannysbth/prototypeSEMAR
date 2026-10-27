@@ -21,7 +21,7 @@ import { buildClaimSchema, caseQuerySchema, loginSchema, reviewSchema, revealSch
 import { runScenario, scenarioList } from './simulate.js';
 import { createUploader } from './upload.js';
 import { createExplainer } from './explain.js';
-import { impactSchema, simulateImpact } from './impact.js';
+import { impactSchema, impactScenarios, simulateImpact } from './impact.js';
 import { buildVerifySchema, toPipelineClaim, toVerifyResponse } from './verify.js';
 
 const config = getConfig();
@@ -218,10 +218,25 @@ app.get('/api/export/evalkit', authenticate, requireRole('admin'), asyncHandler(
 
 app.get('/api/policy', authenticate, asyncHandler(async (req, res) => res.json(await clients.privacy.policy())));
 app.get('/api/notifications', authenticate, requireRole('verifier', 'auditor'), asyncHandler(async (req, res) => res.json(await clients.notify.list())));
-app.get('/api/evaluation/latest', authenticate, (req, res) => {
-  const file = path.join(ROOT, 'reports', 'evaluation.json');
-  if (!fs.existsSync(file)) throw new HttpError(404, 'NO_REPORT', 'Belum ada laporan evaluasi. Jalankan: npm run evaluate');
-  res.type('application/json').send(fs.readFileSync(file, 'utf8'));
+const EVAL_ROLES = ['auditor', 'admin'];
+const reportFile = (name) => path.join(process.env.REPORTS_DIR || path.join(ROOT, 'reports'), name);
+const readReport = (name) => {
+  if (!fs.existsSync(reportFile(name))) throw new HttpError(404, 'NO_REPORT', 'Belum ada laporan evaluasi. Jalankan: npm run evaluate');
+  return fs.readFileSync(reportFile(name), 'utf8');
+};
+app.get('/api/evaluation/latest', authenticate, requireRole(...EVAL_ROLES), (req, res) => res.type('application/json').send(readReport('metrics.json')));
+app.get('/api/impact/scenarios', authenticate, requireRole(...EVAL_ROLES), (req, res) => {
+  const scenarios = impactScenarios(JSON.parse(readReport('metrics.json')));
+  res.json({ scenarios, note: 'Semua skenario adalah asumsi. Rupiah recall dari hasil evaluasi data sintetis, bukan hasil pada data BPJS.' });
+});
+// Evidence card (HTML dari eval-kit) dibuka di iframe, yang tidak bisa mengirim header Authorization; token sesi dikirim lewat query.
+app.get('/api/evaluation/evidence', (req, res, next) => {
+  if (req.query.access_token) req.headers.authorization = `Bearer ${String(req.query.access_token)}`;
+  next();
+}, authenticate, requireRole(...EVAL_ROLES), (req, res) => {
+  res.setHeader('Content-Security-Policy', "sandbox allow-scripts; default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:");
+  const file = ['evidence.html', 'evidence-hard.html'].includes(req.query.file) ? req.query.file : 'evidence.html';
+  res.type('html').send(readReport(file));
 });
 
 // ---------- demo ----------

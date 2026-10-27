@@ -182,21 +182,42 @@ paths:
       responses: { '200': { description: OK } }
   /impact/simulate:
     post:
-      summary: Simulasi dampak rupiah dari parameter (auditor, admin); asumsi ikut dikembalikan
+      summary: Simulasi dampak rupiah (auditor, admin). Rumus docs/07-model-bisnis.md; semua masukan adalah asumsi dan ikut dikembalikan
+      description: |
+        potensi_fraud = annual_claim_value x fraud_rate; terdeteksi = potensi x rupiah_recall; tertahan = terdeteksi x recovery_rate;
+        manfaat_bersih = tertahan - biaya_operasional. Bentuk lama (review_capacity + precision_at_k sebagai ganti rupiah_recall) masih diterima.
       requestBody:
         content:
           application/json:
             schema:
               type: object
-              required: [annual_claim_value, fraud_rate, review_capacity, precision_at_k, recovery_rate]
+              required: [annual_claim_value, fraud_rate, recovery_rate]
               properties:
-                annual_claim_value: { type: number }
-                fraud_rate: { type: number }
-                review_capacity: { type: number }
-                precision_at_k: { type: number }
-                recovery_rate: { type: number }
-                biaya_operasional: { type: number }
-      responses: { '200': { description: Hasil simulasi beserta asumsi } }
+                annual_claim_value: { type: number, description: Nilai klaim tahunan (Rp) }
+                fraud_rate: { type: number, minimum: 0, maximum: 1 }
+                rupiah_recall: { type: number, minimum: 0, maximum: 1, description: Dari reports/metrics.json (kapasitas review 1% adalah asumsi) }
+                recovery_rate: { type: number, minimum: 0, maximum: 1 }
+                biaya_operasional: { type: number, description: Rp per tahun }
+                review_capacity: { type: number, description: Bentuk lama, jangan dipakai bersama rupiah_recall }
+                precision_at_k: { type: number, description: Bentuk lama }
+      responses: { '200': { description: Hasil simulasi beserta asumsi }, '400': { description: Parameter tidak valid } }
+  /impact/scenarios:
+    get:
+      summary: Tiga skenario dampak (rendah, sedang, tinggi) dari reports/metrics.json dan config/pilot-cost.json (auditor, admin)
+      description: Rupiah recall = min, rerata, maks antar-run evaluasi set hard. Fraud rate, recovery rate, dan nilai klaim cabang adalah asumsi (label "asumsi").
+      responses: { '200': { description: '{ scenarios[{ id, title, label, inputs, result }], note }' }, '404': { description: Belum ada laporan; jalankan npm run evaluate } }
+  /evaluation/latest:
+    get:
+      summary: Isi reports/metrics.json (auditor, admin)
+      responses: { '200': { description: Metrik evaluasi }, '404': { description: Belum ada laporan } }
+  /evaluation/evidence:
+    get:
+      summary: Evidence card eval-kit sebagai HTML (auditor, admin); token sesi boleh lewat query access_token agar bisa dipakai iframe
+      security: []
+      parameters:
+        - { name: access_token, in: query, schema: { type: string } }
+        - { name: file, in: query, schema: { type: string, enum: [evidence.html, evidence-hard.html] } }
+      responses: { '200': { description: HTML dengan CSP sandbox }, '401': { description: Tanpa token }, '403': { description: Peran tidak diizinkan } }
   /reports/cases.csv:
     get:
       summary: Ekspor kasus CSV (auditor)

@@ -26,4 +26,6 @@ for (const fac of ['RS-A', 'RS-B']) {
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'demo', 'fkrtl_batch_november.csv');
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, toCsv(rows, CLAIM_COLUMNS));
-console.log(`${rows.length} baris -> ${out}`);
+// Akun faskes hanya boleh mengunggah barisnya sendiri; berkas per faskes dipakai di demo, berkas gabungan untuk verifikator.
+for (const fac of ['RS-A', 'RS-B']) fs.writeFileSync(out.replace('.csv', `_${fac}.csv`), toCsv(rows.filter((r) => r.facility_id === fac), CLAIM_COLUMNS));
+console.log(`${rows.length} baris -> ${out} (+ berkas RS-A dan RS-B)`);

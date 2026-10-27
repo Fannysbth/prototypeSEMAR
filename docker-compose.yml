@@ -1,23 +1,34 @@
-# OPSIONAL. Satu kontainer menjalankan semua layanan (Gateway + 5 microservice) via launcher.
-# Jalankan: docker compose up --build   lalu buka http://localhost:3000
+# OPSIONAL. Satu kontainer menjalankan semua layanan Node (Gateway + 5 microservice) via launcher;
+# layanan ml (Python, scikit-learn) berjalan di kontainer terpisah sehingga ML_ENABLED=true.
+# Urutan: npm run demo:reset (membuat services/ml/data/train.csv), lalu docker compose up --build, buka http://localhost:3000
 services:
   db:
     image: postgres:16
     environment: { POSTGRES_USER: samar, POSTGRES_PASSWORD: samar, POSTGRES_DB: samar }
     ports: ["5433:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
+  ml:
+    build: { context: ., dockerfile: Dockerfile.ml }
+    environment:
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-ganti-internal-key-demo-minimal-32-karakter}
+    volumes: ["./services/ml/data:/app/data:ro"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:4106/health', timeout=2)"]
+      interval: 5s
+      retries: 20
   samar:
     build: .
     ports: ["3000:3000"]
     environment:
       NODE_ENV: production
-      ML_ENABLED: "false"          # image Node tanpa Python: deteksi aturan saja
+      ML_ENABLED: "true"           # layanan ml di kontainer terpisah (lihat service ml)
+      ML_URL: http://ml:4106
       DEMO_MODE: "true"            # demo: akun demo + skenario. Hapus untuk mode ketat.
       JWT_SECRET: ${JWT_SECRET:-ganti-jwt-secret-demo-minimal-32-karakter-xx}
       HMAC_MASTER_KEY: ${HMAC_MASTER_KEY:-ganti-master-key-demo-minimal-32-karakter}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-ganti-internal-key-demo-minimal-32-karakter}
       DATABASE_URL: ${DATABASE_URL:-postgresql://samar:samar@db:5432/samar}   # kosongkan manual untuk mode file
-    depends_on: [db]
+    depends_on: [db, ml]
     volumes:
       - ./data:/app/data
 

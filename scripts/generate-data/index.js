@@ -21,21 +21,22 @@ export function excessRupiah(claim, modus) {
   const ref = REFERENCE[claim.diagnosis_code];
   if (modus === 'UPCODING' && ref) return Math.max(0, claim.amount - ref.tariff_median);
   if (modus === 'PROLONGED_LOS' && ref) return Math.round(claim.amount * Math.max(0, claim.length_of_stay - ref.expected_los) / claim.length_of_stay);
+  if (modus === 'PROCEDURE_MISMATCH') return Math.round(claim.amount * 0.2);
   return claim.amount;
 }
 
-export function generateDataset({ peserta = 5000, seed = 42, fraudRate = 0.03, base = '2026-06-01' } = {}) {
+export function generateDataset({ peserta = 5000, seed = 42, fraudRate = 0.03, base = '2026-06-01', span = 80, difficulty = 'standard' } = {}) {
   const chronic = Math.round(peserta * 0.1);
   const normal = Math.round(peserta * 0.85);
   const fraudScale = (fraudRate * (normal * 1.2 + chronic * 4)) / FRAUD_CLAIMS_PER_SCALE;
-  const items = buildDataset({ seed, normal, chronic, fraudScale, base });
+  const items = buildDataset({ seed, normal, chronic, fraudScale, base, span, difficulty });
   const ref = (n) => `FKL-${String(n + 1).padStart(7, '0')}`;
   const claims = items.map((i, n) => ({ claim_ref: ref(n), facility_id: i.facility_id, ...i.claim }));
   const truth = items.map((i, n) => ({
     claim_ref: ref(n), label: i.label.fraud ? 1 : 0, modus: i.label.modus ?? '',
     excess_rupiah: i.label.fraud ? excessRupiah(i.claim, i.label.modus) : 0, group: i.label.group, holdout: i.label.modus === HOLDOUT_MODUS ? 1 : 0,
   }));
-  return { items, claims, truth, claimsCsv: toCsv(claims, CLAIM_COLUMNS), truthCsv: toCsv(truth, TRUTH_COLUMNS), params: { peserta, seed, fraudRate, base, chronic, normal, fraudScale: +fraudScale.toFixed(2) } };
+  return { items, claims, truth, claimsCsv: toCsv(claims, CLAIM_COLUMNS), truthCsv: toCsv(truth, TRUTH_COLUMNS), params: { peserta, seed, fraudRate, base, span, difficulty, chronic, normal, fraudScale: +fraudScale.toFixed(2) } };
 }
 
 function dataCard(params, n, nFraud) {

@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { startStack } from '../scripts/stack.js';
 import { ROOT } from '../shared/config.js';
@@ -10,6 +11,7 @@ import { ROOT } from '../shared/config.js';
 const KEY = 'v1-internal-key-'.padEnd(40, 'x');
 const py = ['Scripts/python.exe', 'bin/python'].map((p) => path.join(ROOT, 'services/ml/.venv', p)).find((p) => fs.existsSync(p)) ?? 'python';
 const mlDeps = spawnSync(py, ['-c', 'import sklearn, fastapi, uvicorn'], { stdio: 'ignore' }).status === 0;
+const reportsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'samar-reports-'));
 let stack; let base; let mlReady = false;
 const tok = {};
 const api = async (p, { method = 'GET', body, token, raw } = {}) => {
@@ -23,8 +25,10 @@ const claim = (id, o = {}) => ({ claim_id: id, level: 'FKRTL', participant_id: '
 
 test.before(async () => {
   if (!fs.existsSync(path.join(ROOT, 'services/ml/data/train.csv'))) spawnSync(process.execPath, [path.join(ROOT, 'scripts/build-training-set.js')], { stdio: 'ignore' });
+  fs.writeFileSync(path.join(reportsDir, 'metrics.json'), JSON.stringify({ impact_inputs: { rupiah_recall: { low: 0.2, mid: 0.3, high: 0.5 } }, detection: {} }));
+  fs.writeFileSync(path.join(reportsDir, 'evidence.html'), '<!doctype html><title>kartu</title><script>document.title=1</script>');
   stack = await startStack({ quiet: true, env: {
-    STORE: 'memory', DEMO_MODE: 'true', SYNTHETIC_ONLY: 'true', NODE_ENV: 'test', ML_ENABLED: mlDeps ? 'true' : 'false', LLM_API_KEY: '',
+    REPORTS_DIR: reportsDir, STORE: 'memory', DEMO_MODE: 'true', SYNTHETIC_ONLY: 'true', NODE_ENV: 'test', ML_ENABLED: mlDeps ? 'true' : 'false', LLM_API_KEY: '',
     JWT_SECRET: 'v1-jwt-secret'.padEnd(40, 'j'), HMAC_MASTER_KEY: 'v1-master-key'.padEnd(40, 'm'), INTERNAL_API_KEY: KEY,
     PORT: '5490', AUTH_PORT: '5491', PRIVACY_PORT: '5492', CLAIMS_PORT: '5493', FRAUD_PORT: '5494', NOTIFY_PORT: '5495', ML_PORT: '5496',
     RATE_LIMIT_PER_MIN: '100000', VERIFY_RATE_LIMIT_PER_MIN: '100000', LOGIN_MAX_FAILS_PER_MIN: '100', REIDENTIFY_MAX_PER_HOUR: '50', REIDENTIFY_MAX_PER_DAY: '50',
@@ -46,6 +50,7 @@ test('RBAC per endpoint: peran di luar daftar selalu 403, tanpa token 401', asyn
     ['POST', '/cases/CASE-x/reveal', ['aud']], ['POST', '/tokens/revoke', ['adm']], ['POST', '/keys/rotate', ['adm']], ['PUT', '/settings/threshold', ['adm']],
     ['GET', '/dashboard/summary', ['ver', 'aud', 'adm']], ['POST', '/impact/simulate', ['aud', 'adm']], ['GET', '/reports/cases.csv', ['aud']],
     ['GET', '/export/evalkit', ['adm']], ['GET', '/audit', ['adm']], ['GET', '/audit/verify', ['adm']],
+    ['GET', '/evaluation/latest', ['aud', 'adm']], ['GET', '/evaluation/evidence', ['aud', 'adm']], ['GET', '/impact/scenarios', ['aud', 'adm']],
   ];
   for (const [method, p, allowed] of matrix) {
     assert.equal((await api(p, { method, body: method === 'GET' ? undefined : {} })).status, 401, `${method} ${p} tanpa token`);
@@ -163,4 +168,18 @@ test('frontend web/ disajikan gateway (HTML, JS, CSS) dengan CSP ketat', async (
   assert.equal(idx.status, 200); assert.match(await idx.text(), /SAMAR/);
   assert.match(idx.headers.get('content-security-policy'), /script-src 'self'/);
   for (const f of ['/app.js', '/style.css']) assert.equal((await fetch(`${base}${f}`)).status, 200, f);
+});
+
+test('halaman evaluasi: metrik, skenario dampak, dan evidence card hanya untuk auditor/admin', async () => {
+  const ev = await api('/evaluation/latest', { token: tok.aud });
+  assert.equal(ev.status, 200); assert.ok('impact_inputs' in ev.json);
+  const sc = await api('/impact/scenarios', { token: tok.adm });
+  assert.deepEqual(sc.json.scenarios.map((x) => x.id), ['rendah', 'sedang', 'tinggi']);
+  assert.ok(sc.json.scenarios.every((x) => x.label === 'asumsi'));
+  // iframe tidak bisa mengirim header Authorization: token lewat query, tetap diperiksa perannya
+  const html = await fetch(`${base}/api/v1/evaluation/evidence?access_token=${tok.aud}`);
+  assert.equal(html.status, 200); assert.match(html.headers.get('content-type'), /html/); assert.match(html.headers.get('content-security-policy'), /sandbox/);
+  assert.equal((await fetch(`${base}/api/v1/evaluation/evidence?access_token=${tok.fac}`)).status, 403);
+  assert.equal((await fetch(`${base}/api/v1/evaluation/evidence?access_token=${tok.ver}`)).status, 403);
+  assert.equal((await fetch(`${base}/api/v1/evaluation/evidence`)).status, 401);
 });

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><title>Kartu bukti</title>
+<style>
+body { font-family: Arial, Helvetica, sans-serif; color: #1A1A1A; background: #FFFFFF; max-width: 820px;
+       margin: 32px auto; padding: 0 16px; line-height: 1.4; }
+h1 { font-size: 26px; margin-bottom: 4px; }
+h2 { font-size: 17px; margin: 24px 0 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #DDDDDD; vertical-align: top; }
+th { color: #6B6B6B; font-weight: normal; }
+.box { border: 2px solid #B23A3A; padding: 8px 16px; margin-top: 24px; }
+.box h2 { color: #B23A3A; margin-top: 8px; }
+.jury { border: 2px solid #0F6E6E; padding: 8px 16px; margin-top: 16px; font-size: 16px; }
+.jury h2 { color: #0F6E6E; margin-top: 8px; }
+@media print { body { margin: 0 auto; } }
+</style></head><body>
+<h1>Kartu bukti</h1>
+<h2>Kondisi pengujian</h2>
+<table>
+<tr><th>Sumber data</th><td>sintetis</td></tr>
+<tr><th>Tolok ukur</th><td>tidak dinyatakan</td></tr>
+<tr><th>Generator ditulis oleh</th><td>tidak dinyatakan</td></tr>
+<tr><th>Dikalibrasi ke</th><td>tidak dinyatakan</td></tr>
+<tr><th>Seed</th><td>42</td></tr>
+<tr><th>Entitas yang dinilai</th><td>2.120</td></tr>
+<tr><th>Prevalensi</th><td>2,6%</td></tr>
+<tr><th>Kapasitas audit k</th><td>1% (22 klaim, asumsi)</td></tr>
+</table>
+<h2>Hasil utama pada kapasitas k</h2>
+<table>
+<tr><th>precision@k</th><td>1,00 (IK 95% 1,00–1,00, resampling per pasien)</td></tr>
+<tr><th>Lift dibanding acak</th><td>38,5×</td></tr>
+<tr><th>Recall rupiah@k</th><td>42,1%</td></tr>
+<tr><th>Persentase pasien jujur yang diaudit</th><td>0 / 1.508 (0%)</td></tr>
+</table>
+<h2>Positif palsu tingkat entitas</h2>
+<table>
+<tr><td>0 dari 2.065 klaim jujur termasuk kasus yang ditandai (tingkat positif palsu 0%). Bukan metrik utama: pada kapasitas tetap angka ini selalu kecil. Persentase pasien jujur yang diaudit menunjukkan di mana bebannya jatuh.</td></tr>
+</table>
+<h2>Recall@k per modus</h2>
+<table>
+<tr><th>Modus</th><th>Kasus</th><th>Masuk k teratas</th><th>Recall</th></tr>
+<tr><td>PHANTOM_BILLING</td><td>10</td><td>10</td><td>1,00</td></tr>
+<tr><td>PROCEDURE_MISMATCH</td><td>2</td><td>0</td><td>0,00 (lemah)</td></tr>
+<tr><td>PROLONGED_LOS</td><td>6</td><td>5</td><td>0,83</td></tr>
+<tr><td>REPEAT_BILLING</td><td>11</td><td>0</td><td>0,00 (lemah)</td></tr>
+<tr><td>SELF_REFERRAL</td><td>10</td><td>5</td><td>0,50</td></tr>
+<tr><td>UNBUNDLING</td><td>10</td><td>0</td><td>0,00 (lemah)</td></tr>
+<tr><td>UPCODING</td><td>6</td><td>2</td><td>0,33</td></tr>
+</table>
+<h2>Persentase pasien jujur yang diaudit, per strata</h2>
+<table>
+<tr><th>Strata</th><th>Nilai</th><th>Jujur</th><th>Ditandai</th><th>Tingkat</th></tr>
+<tr><td>level</td><td>B</td><td>795</td><td>0</td><td>0%</td></tr>
+<tr><td>level</td><td>C</td><td>713</td><td>0</td><td>0%</td></tr>
+<tr><td>region</td><td>Barat</td><td>797</td><td>0</td><td>0%</td></tr>
+<tr><td>region</td><td>Timur</td><td>711</td><td>0</td><td>0%</td></tr>
+<tr><td>ukuran</td><td>besar</td><td>489</td><td>0</td><td>0%</td></tr>
+<tr><td>ukuran</td><td>sedang</td><td>507</td><td>0</td><td>0%</td></tr>
+<tr><td>ukuran</td><td>kecil</td><td>512</td><td>0</td><td>0%</td></tr>
+</table>
+<div class="box"><h2>Keterbatasan</h2><ul>
+<li>Data sintetis; kinerja pada klaim nyata belum diukur.</li>
+<li>Lemah pada PROCEDURE_MISMATCH (recall@k di bawah 0,30).</li>
+<li>Lemah pada REPEAT_BILLING (recall@k di bawah 0,30).</li>
+<li>Lemah pada UNBUNDLING (recall@k di bawah 0,30).</li>
+</ul></div>
+<div class="jury"><h2>Untuk juri</h2><p>Dari 22 klaim yang diaudit pada asumsi kapasitas kami (1%), 22 (IK 95% 22–22) merupakan fraud pada pengujian ini, 38,5× dibanding pemilihan acak. Dari 1.508 pasien yang jujur, 0 ikut diaudit.</p></div>
+</body></html>

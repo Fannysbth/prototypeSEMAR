@@ -76,22 +76,24 @@ export const SCENARIOS = {
     const f = pick(rng, FACILITIES).id;
     return [{ step: 'Klaim wajar', facility_id: f, claim: baseClaim(rng, pf.next(), f, d), label: lab(false, null, 'normal') }];
   },
-  self_referral: (rng, pf, d) => {
+  self_referral: (rng, pf, d, hard) => {
     const p = pf.next(); const [a, b, c] = F(rng, 3); const dx = pick(rng, ['I10', 'J45.9', 'K29.7']);
+    const gap = hard ? int(rng, 4, 6) : 1; // hard: jarak antar-faskes mendekati batas jendela 7 hari
     return [
       { step: `Hari 1 - ${a}`, facility_id: a, claim: baseClaim(rng, p, a, d, { dx, length_of_stay: 1 }), label: lab(false, null, 'self_referral_seed') },
-      { step: `Hari 2 - ${b}`, facility_id: b, claim: baseClaim(rng, p, b, addDays(d, 1), { dx, length_of_stay: 1 }), label: lab(true, 'SELF_REFERRAL', 'self_referral') },
-      { step: `Hari 3 - ${c}`, facility_id: c, claim: baseClaim(rng, p, c, addDays(d, 2), { dx, length_of_stay: 1 }), label: lab(true, 'SELF_REFERRAL', 'self_referral') },
+      { step: `Hari 2 - ${b}`, facility_id: b, claim: baseClaim(rng, p, b, addDays(d, gap), { dx, length_of_stay: 1 }), label: lab(true, 'SELF_REFERRAL', 'self_referral') },
+      { step: `Hari 3 - ${c}`, facility_id: c, claim: baseClaim(rng, p, c, addDays(d, 2 * gap), { dx, length_of_stay: 1 }), label: lab(true, 'SELF_REFERRAL', 'self_referral') },
     ];
   },
-  phantom: (rng, pf, d) => {
+  phantom: (rng, pf, d, hard) => {
     const p = pf.next(); const [a, b] = F(rng, 2); const dx = pick(rng, ['J18.9', 'A90', 'K35.8']);
+    const los = hard ? 2 : 4; // hard: tumpang tindih hanya 1 hari
     return [
-      { step: `Rawat inap 4 hari - ${a}`, facility_id: a, claim: baseClaim(rng, p, a, d, { dx, length_of_stay: 4 }), label: lab(false, null, 'phantom_seed') },
+      { step: `Rawat inap ${los} hari - ${a}`, facility_id: a, claim: baseClaim(rng, p, a, d, { dx, length_of_stay: los }), label: lab(false, null, 'phantom_seed') },
       { step: `Rawat bersamaan - ${b}`, facility_id: b, claim: baseClaim(rng, p, b, addDays(d, 1), { dx, length_of_stay: 3 }), label: lab(true, 'PHANTOM_BILLING', 'phantom') },
     ];
   },
-  cloning: (rng, pf, d) => {
+  cloning: (rng, pf, d, hard) => {
     const [f] = F(rng, 1); const dx = pick(rng, ['A09', 'N39.0', 'E11.9']);
     const tmpl = baseClaim(rng, pf.next(), f, d, { dx });
     const out = [];
@@ -99,36 +101,59 @@ export const SCENARIOS = {
       const p = pf.next();
       out.push({
         step: `Klaim identik #${i + 1} - ${f}`, facility_id: f,
-        claim: { ...baseClaim(rng, p, f, addDays(d, i), { dx, procedure_code: tmpl.procedure_code, length_of_stay: tmpl.length_of_stay, amount: tmpl.amount }), claim_type: tmpl.claim_type },
+        claim: { ...baseClaim(rng, p, f, addDays(d, hard ? i * 3 : i), { dx, procedure_code: tmpl.procedure_code, length_of_stay: tmpl.length_of_stay, amount: tmpl.amount }), claim_type: tmpl.claim_type },
         label: i >= 2 ? lab(true, 'CLONING', 'cloning') : lab(false, null, 'cloning_seed'),
       });
     }
     return out;
   },
-  upcoding: (rng, pf, d) => {
+  upcoding: (rng, pf, d, hard) => {
     const f = pick(rng, FACILITIES).id; const dx = pick(rng, DIAGNOSES.filter((x) => REFERENCE[x].expected_los >= 3));
-    const mult = 2.1 + rng() * 1.1;
+    const mult = hard ? 1.15 + rng() * 0.35 : 2.1 + rng() * 1.1;
     return [{ step: `Tagihan ${mult.toFixed(1)}x referensi - ${f}`, facility_id: f, claim: baseClaim(rng, pf.next(), f, d, { dx, amount: round100(REFERENCE[dx].tariff_median * mult) }), label: lab(true, 'UPCODING', 'upcoding') }];
   },
-  unbundling: (rng, pf, d) => {
+  unbundling: (rng, pf, d, hard) => {
     const p = pf.next(); const f = pick(rng, FACILITIES).id; const dx = pick(rng, ['J18.9', 'K35.8', 'I21.9']); const med = REFERENCE[dx].tariff_median;
     return [
       { step: `Klaim bagian 1 - ${f}`, facility_id: f, claim: baseClaim(rng, p, f, d, { dx, length_of_stay: 1, amount: round100(med * 0.5) }), label: lab(false, null, 'unbundling_seed') },
-      { step: `Klaim bagian 2 (pecahan) - ${f}`, facility_id: f, claim: baseClaim(rng, p, f, addDays(d, 1), { dx, length_of_stay: 1, amount: round100(med * 0.52) }), label: lab(true, 'UNBUNDLING', 'unbundling') },
+      { step: `Klaim bagian 2 (pecahan) - ${f}`, facility_id: f, claim: baseClaim(rng, p, f, addDays(d, hard ? 3 : 1), { dx, length_of_stay: 1, amount: round100(med * 0.52) }), label: lab(true, 'UNBUNDLING', 'unbundling') },
     ];
   },
-  repeat_billing: (rng, pf, d) => {
+  repeat_billing: (rng, pf, d, hard) => {
     const p = pf.next(); const f = pick(rng, FACILITIES).id; const dx = pick(rng, DIAGNOSES.filter((x) => REFERENCE[x].expected_los >= 2));
     const first = baseClaim(rng, p, f, d, { dx });
     return [
       { step: `Klaim awal - ${f}`, facility_id: f, claim: first, label: lab(false, null, 'repeat_seed') },
-      { step: `Klaim yang sama ditagih ulang (+10 hari) - ${f}`, facility_id: f, claim: { ...first, admit_date: addDays(d, 10) }, label: lab(true, 'REPEAT_BILLING', 'repeat') },
+      { step: `Klaim yang sama ditagih ulang (+10 hari) - ${f}`, facility_id: f, claim: { ...first, admit_date: addDays(d, hard ? 38 : 10) }, label: lab(true, 'REPEAT_BILLING', 'repeat') },
     ];
   },
-  prolonged_los: (rng, pf, d) => {
+  prolonged_los: (rng, pf, d, hard) => {
     const f = pick(rng, FACILITIES).id; const dx = pick(rng, DIAGNOSES.filter((x) => REFERENCE[x].expected_los >= 3)); const ref = REFERENCE[dx];
-    const los = ref.max_los + int(rng, 3, 6);
-    return [{ step: `Rawat ${los} hari (wajar ${ref.expected_los}) - ${f}`, facility_id: f, claim: baseClaim(rng, pf.next(), f, d, { dx, length_of_stay: los, amount: round100(ref.tariff_median * 1.25) }), label: lab(true, 'PROLONGED_LOS', 'prolonged') }];
+    const los = ref.max_los + (hard ? int(rng, 1, 2) : int(rng, 3, 6));
+    return [{ step: `Rawat ${los} hari (wajar ${ref.expected_los}) - ${f}`, facility_id: f, claim: baseClaim(rng, pf.next(), f, d, { dx, length_of_stay: los, amount: round100(ref.tariff_median * (hard ? 1.1 : 1.25)) }), label: lab(true, 'PROLONGED_LOS', 'prolonged') }];
+  },
+};
+
+// Hanya dipakai mode hard. procedure_mismatch: modus yang TIDAK punya detektor aturan (hanya fitur tindakan_tidak_lazim untuk ML).
+export const HARD_ONLY = {
+  procedure_mismatch: (rng, pf, d) => {
+    const f = pick(rng, FACILITIES).id; const dx = pick(rng, DIAGNOSES);
+    const other = pick(rng, DIAGNOSES.filter((x) => !REFERENCE[x].procedures.some((q) => REFERENCE[dx].procedures.includes(q))));
+    const c = baseClaim(rng, pf.next(), f, d, { dx, procedure_code: pick(rng, REFERENCE[other].procedures) });
+    return [{ step: `Tindakan tidak lazim untuk diagnosis - ${f}`, facility_id: f, claim: { ...c, amount: round100(c.amount * 1.2) }, label: lab(true, 'PROCEDURE_MISMATCH', 'procedure_mismatch') }];
+  },
+  // Hard negative: rujukan sah beberapa hari setelah kunjungan pertama, mirip pola self-referral.
+  quick_referral: (rng, pf, d) => {
+    const p = pf.next(); const [a, b] = F(rng, 2); const dx = pick(rng, ['J45.9', 'K29.7', 'E11.9']);
+    return [
+      { step: `Kunjungan awal - ${a}`, facility_id: a, claim: baseClaim(rng, p, a, d, { dx, length_of_stay: 1 }), label: lab(false, null, 'hard_negative') },
+      { step: `Rujukan sah - ${b}`, facility_id: b, claim: baseClaim(rng, p, b, addDays(d, int(rng, 3, 6)), { dx, length_of_stay: 1 }), label: lab(false, null, 'hard_negative') },
+    ];
+  },
+  // Hard negative: kasus berat sah dengan biaya dan lama rawat di atas rata-rata tetapi masih dalam batas wajar.
+  severe_case: (rng, pf, d) => {
+    const f = pick(rng, FACILITIES).id; const dx = pick(rng, DIAGNOSES.filter((x) => REFERENCE[x].expected_los >= 3)); const ref = REFERENCE[dx];
+    return [{ step: `Kasus berat sah - ${f}`, facility_id: f, claim: baseClaim(rng, pf.next(), f, d, { dx, length_of_stay: ref.max_los, amount: round100(ref.tariff_median * (1.2 + rng() * 0.2)) }), label: lab(false, null, 'hard_negative') }];
   },
 };
 
@@ -145,7 +170,8 @@ export const SCENARIO_META = {
 
 // ---- Dataset berlabel untuk evaluasi/pelatihan ----
 // chronic: jumlah pasien kronis wajar (hard negative: sering kontrol di faskes sama, jarak 10-14 hari). fraudScale: pengali jumlah skenario fraud.
-export function buildDataset({ seed = 2026, normal = 220, base = '2026-06-01', fraud = true, chronic = 0, fraudScale = 1 } = {}) {
+export function buildDataset({ seed = 2026, normal = 220, base = '2026-06-01', fraud = true, chronic = 0, fraudScale = 1, span = 80, difficulty = 'standard' } = {}) {
+  const hard = difficulty === 'hard';
   const rng = makeRng(seed);
   const pf = new PatientFactory(rng);
   const items = [];
@@ -153,7 +179,7 @@ export function buildDataset({ seed = 2026, normal = 220, base = '2026-06-01', f
   const push = (x) => items.push({ ...x, seq: seq++ });
 
   for (let i = 0; i < normal; i += 1) {
-    const day = int(rng, 0, 80);
+    const day = int(rng, 0, span);
     const [item] = SCENARIOS.normal(rng, pf, addDays(base, day));
     push(item);
     const r = rng();
@@ -170,7 +196,7 @@ export function buildDataset({ seed = 2026, normal = 220, base = '2026-06-01', f
   for (let i = 0; i < chronic; i += 1) {
     const f = pick(rng, FACILITIES).id; const dx = pick(rng, ['I10', 'E11.9']);
     const p = pf.next();
-    let day = int(rng, 0, 30);
+    let day = int(rng, 0, Math.max(30, span - 50));
     for (let v = 0; v < 4; v += 1) {
       push({ step: v === 0 ? 'Kontrol rutin kronis' : `Kontrol rutin #${v + 1}`, facility_id: f, claim: { ...baseClaim(rng, p, f, addDays(base, day), { dx, length_of_stay: 1 }), claim_type: 'RJ' }, label: lab(false, null, 'chronic_control') });
       day += int(rng, 10, 14);
@@ -178,10 +204,18 @@ export function buildDataset({ seed = 2026, normal = 220, base = '2026-06-01', f
   }
   if (fraud) {
     const groups = { self_referral: 8, phantom: 8, cloning: 4, upcoding: 12, unbundling: 8, repeat_billing: 8, prolonged_los: 6 };
-    for (const [name, base_n] of Object.entries(groups)) {
+    const lastDay = span - 10;
+    // Hard negatives tambahan dibangkitkan SEBELUM fraud agar klaim wajar dan chronic identik antar tingkat kesulitan.
+    if (hard) {
+      for (const [name, base_n] of Object.entries({ quick_referral: 14, severe_case: 14 })) {
+        for (let i = 0; i < Math.max(1, Math.round(base_n * fraudScale)); i += 1) for (const item of HARD_ONLY[name](rng, pf, addDays(base, int(rng, 5, lastDay)))) push(item);
+      }
+    }
+    for (const [name, base_n] of Object.entries(hard ? { ...groups, procedure_mismatch: 8 } : groups)) {
       const n = Math.max(1, Math.round(base_n * fraudScale));
+      const gen = SCENARIOS[name] ?? HARD_ONLY[name];
       for (let i = 0; i < n; i += 1) {
-        for (const item of SCENARIOS[name](rng, pf, addDays(base, int(rng, 5, 70)))) push(item);
+        for (const item of gen(rng, pf, addDays(base, int(rng, 5, lastDay)), hard)) push(item);
       }
     }
   }

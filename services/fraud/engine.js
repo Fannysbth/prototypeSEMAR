@@ -84,6 +84,32 @@ export const noisyOr = (scores) => Math.round(100 * (1 - scores.reduce((p, s) =>
 export const riskLevel = (s, th = THRESHOLDS) => (s >= th.levels.high ? 'HIGH' : s >= th.levels.medium ? 'MEDIUM' : s >= th.levels.low ? 'LOW' : 'NONE');
 const weightOf = (f) => (f.modus === 'ML_ANOMALY' ? WEIGHTS.ml_isolation_forest : f.modus === 'ML_SUPERVISED' ? WEIGHTS.ml_supervised : (WEIGHTS.rules[f.rule] ?? 1));
 
+// Sinyal ML -> flag (sama untuk layanan dan evaluator offline). m: { if_score, sup_score, top }.
+export function mlFlags(m, features, th = THRESHOLDS) {
+  const out = [];
+  if (m.if_score >= th.mlFlag) {
+    out.push({
+      modus: 'ML_ANOMALY', rule: 'isolation_forest', score: Math.min(60, Math.round(30 + (m.if_score - th.mlFlag) * 150)),
+      reason: `Pola klaim tidak lazim secara statistik dibanding klaim normal (skor anomali ${m.if_score.toFixed(2)}).`,
+      evidence: { anomaly_score: +m.if_score.toFixed(3), features },
+    });
+  }
+  if (m.sup_score >= WEIGHTS.ml_supervised_min) {
+    const top = m.top ?? [];
+    out.push({
+      modus: 'ML_SUPERVISED', rule: 'supervised_model', score: Math.round(m.sup_score * 100),
+      reason: `Model supervised menilai pola kunjungan lintas faskes mirip kasus yang pernah dikonfirmasi (skor ${m.sup_score.toFixed(2)}${top.length ? `; fitur teratas: ${top.slice(0, 3).map(([k]) => k).join(', ')}` : ''}).`,
+      evidence: { supervised_score: +m.sup_score.toFixed(3), top_features: top, features },
+    });
+  }
+  return out;
+}
+export function combineFlags(flags, { round = true } = {}) {
+  if (!flags.length) return 0;
+  const raw = 100 * (1 - flags.reduce((p, f) => p * (1 - (f.score * weightOf(f)) / 100), 1));
+  return round ? Math.round(raw) : raw;
+}
+
 // Estimasi rupiah berlebih per kasus (indikatif, bukan angka audit).
 function estimateExcess(obs, flags) {
   const ref = REFERENCE[obs.diagnosis_code];
@@ -174,21 +200,8 @@ export function createEngine({ observations, cases, events, settings, forest, ml
     const feats = extractFeatures(obs, ctx);
     const features = named(feats);
     const m = await mlScores(feats);
-    if (m.if_score >= th.mlFlag) {
-      flags.push({
-        modus: 'ML_ANOMALY', rule: 'isolation_forest', score: Math.min(60, Math.round(30 + (m.if_score - th.mlFlag) * 150)),
-        reason: `Pola klaim tidak lazim secara statistik dibanding klaim normal (skor anomali ${m.if_score.toFixed(2)}).`,
-        evidence: { anomaly_score: +m.if_score.toFixed(3), features },
-      });
-    }
-    if (m.sup_score >= WEIGHTS.ml_supervised_min) {
-      flags.push({
-        modus: 'ML_SUPERVISED', rule: 'supervised_model', score: Math.round(m.sup_score * 100),
-        reason: `Model supervised menilai pola kunjungan lintas faskes mirip kasus yang pernah dikonfirmasi (skor ${m.sup_score.toFixed(2)}${m.top.length ? `; fitur teratas: ${m.top.slice(0, 3).map(([k]) => k).join(', ')}` : ''}).`,
-        evidence: { supervised_score: +m.sup_score.toFixed(3), top_features: m.top, features },
-      });
-    }
-    const score = flags.length ? noisyOr(flags.map((f) => f.score * weightOf(f))) : 0;
+    flags.push(...mlFlags(m, features, th));
+    const score = combineFlags(flags);
     const level = riskLevel(score, th);
     const result = {
       claim_id: obs.claim_id, risk_score: score, risk_level: level, ml_score: +m.if_score.toFixed(3), sup_score: +m.sup_score.toFixed(3),

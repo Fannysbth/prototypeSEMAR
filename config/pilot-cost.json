@@ -1,0 +1,11 @@
+{
+  "sumber": "docs/07-model-bisnis.md, estimasi biaya pilot 1 kantor cabang. Asumsi, bukan penawaran.",
+  "biaya_per_bulan_rp": {
+    "server_aplikasi_dan_postgres": 3000000,
+    "llm_penjelasan": 300000,
+    "pemeliharaan": 7500000,
+    "cadangan_dan_monitoring": 500000
+  },
+  "nilai_klaim_tahunan_cabang_rp": 4000000000000,
+  "catatan_nilai_klaim": "Ilustrasi: 3% x Rp4 triliun = Rp120 miliar per tahun, setara klaim tidak wajar Rp10 miliar per bulan di 07-model-bisnis.md. Ganti dengan data cabang sebenarnya."
+}

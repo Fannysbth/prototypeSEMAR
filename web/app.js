@@ -35,8 +35,8 @@ function logout(msg) { state.token = null; state.user = null; save(); render(msg
 const TABS = {
   facility: [['unggah', 'Unggah CSV']],
   verifier: [['kasus', 'Kasus'], ['unggah', 'Unggah CSV'], ['dashboard', 'Dashboard']],
-  auditor: [['kasus', 'Kasus'], ['dashboard', 'Dashboard & simulasi']],
-  admin: [['dashboard', 'Dashboard'], ['audit', 'Audit & pengaturan']],
+  auditor: [['kasus', 'Kasus'], ['dashboard', 'Dashboard & simulasi'], ['evaluasi', 'Evaluasi']],
+  admin: [['dashboard', 'Dashboard & simulasi'], ['audit', 'Audit & pengaturan'], ['evaluasi', 'Evaluasi']],
 };
 const ROLE_LABEL = { facility: 'Faskes', verifier: 'Verifikator', auditor: 'Auditor', admin: 'Admin / DPO' };
 
@@ -93,10 +93,11 @@ async function viewKasus() {
   async function load() {
     const q = new URLSearchParams(Object.entries(f).filter(([, v]) => v)).toString();
     try {
-      const { items } = await api(`/cases${q ? `?${q}` : ''}`);
+      const { items: found } = await api(`/cases${q ? `?${q}` : ''}`);
+      const items = [...found].sort((a, b) => b.risk_score - a.risk_score || b.created_ms - a.created_ms);
       list.replaceChildren(h('div', { class: 'table-wrap' }, h('table', {}, h('tr', {}, ['Kasus', 'Risiko', 'Skor', 'Modus', 'Faskes', 'Status', 'Nominal'].map((x) => h('th', {}, x))),
         items.map((c) => h('tr', { class: 'click', onclick: () => open(c.case_id) }, h('td', { class: 'mono' }, c.case_id), h('td', {}, badge(c.risk_level)), h('td', {}, c.risk_score), h('td', {}, c.modi.join(', ')), h('td', {}, c.facilities.join(', ')), h('td', {}, c.status), h('td', {}, rp(c.amount)))))),
-      items.length ? null : h('p', { class: 'muted' }, 'Belum ada kasus. Unggah CSV terlebih dahulu.'));
+      ...(items.length ? [] : [h('p', { class: 'muted' }, 'Belum ada kasus. Unggah CSV terlebih dahulu.')]));
     } catch (e) { note(list, e.message); }
   }
   async function open(id) {
@@ -137,16 +138,65 @@ async function viewDashboard() {
   } catch (e) { box.append(h('div', { class: 'card' }, h('div', { class: 'msg err' }, e.message))); }
   if (!['auditor', 'admin'].includes(state.user.role)) return;
   const inp = (id, label, val) => h('div', {}, h('label', {}, label), h('input', { id, value: val, inputmode: 'decimal' }));
-  const out = h('div');
-  box.append(h('div', { class: 'card' }, h('h2', {}, 'Simulasi dampak rupiah'), h('p', { class: 'muted' }, 'Semua angka adalah asumsi yang Anda isi. Isi precision_at_k dari hasil npm run evaluate, bukan perkiraan.'),
-    h('div', { class: 'row' }, inp('annual_claim_value', 'Nilai klaim tahunan (Rp)', '1000000000000'), inp('fraud_rate', 'fraud_rate (0-1)', '0.03'), inp('review_capacity', 'review_capacity (0-1)', '0.01')),
-    h('div', { class: 'row' }, inp('precision_at_k', 'precision_at_k (0-1)', ''), inp('recovery_rate', 'recovery_rate (0-1)', '0.5'), inp('biaya_operasional', 'Biaya operasional (Rp)', '0')),
+  const out = h('div'); const scen = h('div', { class: 'row' });
+  const FIELDS = ['annual_claim_value', 'fraud_rate', 'rupiah_recall', 'recovery_rate', 'biaya_operasional'];
+  const fill = (inputs) => FIELDS.forEach((k) => { $(k).value = String(inputs[k]); });
+  box.append(h('div', { class: 'card' }, h('h2', {}, 'Simulasi dampak rupiah ', h('span', { class: 'badge' }, 'asumsi')),
+    h('p', { class: 'muted' }, 'Semua angka adalah asumsi yang bisa diubah. Rupiah recall berasal dari hasil npm run evaluate pada data sintetis (kapasitas review 1% adalah asumsi). Biaya = estimasi pilot 1 cabang setahun dari docs/07-model-bisnis.md, bukan penawaran.'),
+    scen,
+    h('div', { class: 'row' }, inp('annual_claim_value', 'Nilai klaim tahunan cabang (Rp)', ''), inp('fraud_rate', 'fraud_rate (0-1)', ''), inp('rupiah_recall', 'rupiah_recall (0-1)', '')),
+    h('div', { class: 'row' }, inp('recovery_rate', 'recovery_rate (0-1)', ''), inp('biaya_operasional', 'Biaya operasional setahun (Rp)', '')),
     h('button', { class: 'btn', onclick: async () => {
-      const body = Object.fromEntries(['annual_claim_value', 'fraud_rate', 'review_capacity', 'precision_at_k', 'recovery_rate', 'biaya_operasional'].map((k) => [k, Number($(k).value)]));
-      if ($('precision_at_k').value === '') return note(out, 'Isi precision_at_k.');
+      const body = Object.fromEntries(FIELDS.map((k) => [k, Number($(k).value)]));
+      if (FIELDS.some((k) => $(k).value === '')) return note(out, 'Isi semua kolom atau pilih skenario.');
       try { const r = await api('/impact/simulate', { method: 'POST', body }); out.replaceChildren(h('div', { class: 'grid' }, Object.entries(r.result).map(([k, v]) => h('div', { class: 'stat' }, h('b', {}, k.endsWith('_rp') ? rp(v) : String(v ?? '-')), h('span', {}, k)))), h('h3', {}, 'Asumsi'), h('ul', { class: 'plain' }, r.assumptions.map((a) => h('li', {}, a)))); } catch (e) { note(out, e.message); }
     } }, 'Hitung'), out,
     state.user.role === 'auditor' ? h('p', {}, h('button', { class: 'btn alt', onclick: () => download('/reports/cases.csv', 'cases.csv').catch((e) => note(out, e.message)) }, 'Unduh laporan kasus (CSV)')) : null));
+  try {
+    const { scenarios } = await api('/impact/scenarios');
+    scen.append(...scenarios.map((x) => h('button', { class: 'btn alt', onclick: () => fill(x.inputs) }, `Skenario ${x.title}`)));
+    const mid = scenarios.find((x) => x.id === 'sedang'); if (mid) fill(mid.inputs);
+  } catch (e) { scen.append(h('span', { class: 'muted' }, `${e.message} Isi manual.`)); }
+}
+
+const f1 = (x, d = 1) => (x === null || x === undefined ? '-' : `${(x * 100).toFixed(d)}%`);
+const statTxt = (s) => (s ? `${f1(s.mean)} (${f1(s.min)}-${f1(s.max)})` : '-');
+const tbl = (head, rows) => h('div', { class: 'table-wrap' }, h('table', {}, h('tr', {}, head.map((x) => h('th', {}, x))), rows.map((r) => h('tr', {}, r.map((c) => h('td', {}, c))))));
+const VARIAN = { full: 'SAMAR lengkap', no_ml: 'Tanpa ML (aturan saja)', no_rules: 'Tanpa aturan (ML saja)', no_cross: 'Tanpa fitur lintas faskes' };
+
+async function viewEvaluasi() {
+  const box = h('div'); $('view').replaceChildren(box);
+  let m;
+  try { m = await api('/evaluation/latest'); } catch (e) { box.append(h('div', { class: 'card' }, h('div', { class: 'msg err' }, `${e.message} Jalankan: npm run evaluate`))); return; }
+  const d = m.detection; const p = m.stack; const pr = m.protocol;
+  box.append(h('div', { class: 'card' }, h('h2', {}, 'Evaluasi (data sintetis)'),
+    h('div', { class: 'msg err' }, 'Angka ini dari data sintetis dengan label dari generator; kapasitas review 1% adalah asumsi. Ini bukti mekanisme, bukan akurasi pada data JKN riil.'),
+    h('p', { class: 'muted' }, `${pr.seeds.length} seed x fraud rate ${pr.fraud_rates.map((x) => `${x * 100}%`).join('/')} x 2 tingkat kesulitan. Latih hari 0-${pr.train_days - 1} (bulan 1-4), uji bulan 5-6. Modus hold-out: ${pr.holdout_modus}. Angka = rerata (min-maks) antar run. Dibuat ${new Date(m.generated_at).toLocaleString('id-ID')}.`),
+    ...['standard', 'hard'].flatMap((df) => [h('h3', {}, df === 'standard' ? 'Set standar' : 'Set hard (skenario lebih sulit)'),
+      tbl(['Varian', 'precision@1%', 'recall@1%', 'rupiah recall@1%', 'PR-AUC', 'ROC-AUC'], Object.entries(VARIAN).map(([v, name]) => { const x = d.summary[df][v]; return [name, statTxt(x.precision_at_1pct), statTxt(x.recall_at_1pct), statTxt(x.rupiah_recall_at_1pct), x.pr_auc ? x.pr_auc.mean.toFixed(3) : '-', x.roc_auc ? x.roc_auc.mean.toFixed(3) : '-']; }))]),
+    d.saturation_note ? h('p', { class: 'muted' }, d.saturation_note) : null,
+    h('p', { class: 'muted' }, 'Ablasi: bandingkan baris "SAMAR lengkap" dengan "Tanpa fitur lintas faskes", "Tanpa ML", dan "Tanpa aturan" pada tabel di atas.')));
+  const ho = (df, v) => { const x = d.holdout[df][v]; return x ? `${f1(x.recall)} [${f1(x.ci95.lo)}-${f1(x.ci95.hi)}], n=${x.n}` : '-'; };
+  box.append(h('div', { class: 'card' }, h('h2', {}, `Modus hold-out: ${pr.holdout_modus}`), h('p', { class: 'muted' }, 'Tidak dipakai melatih model supervised. Recall pada ambang kasus (skor >= 45), gabungan semua run, CI Wilson 95%.'),
+    tbl(['Varian', 'Set standar', 'Set hard'], ['full', 'no_rules', 'no_cross', 'no_ml'].map((v) => [VARIAN[v], ho('standard', v), ho('hard', v)]))));
+  const pii = p.privacy;
+  box.append(h('div', { class: 'card' }, h('h2', {}, 'Tanpa SAMAR vs dengan SAMAR'),
+    tbl(['Ukuran', 'Tanpa SAMAR (baseline)', 'Dengan SAMAR'], [
+      ['Paritas deteksi (skor + modus identik)', '-', `${p.parity.pct.toFixed(1)}% (${p.parity.identical}/${p.parity.total} klaim)`],
+      ['Precision / recall pada ambang kasus', `${f1(p.detection.baseline.precision)} / ${f1(p.detection.baseline.recall)}`, `${f1(p.detection.proposed.precision)} / ${f1(p.detection.proposed.recall)}`],
+      ['Payload zona token yang memuat PII', `${pii.baseline.pct_with_pii.toFixed(0)}%`, `${pii.proposed.pct_with_pii.toFixed(0)}%`],
+      ['Latensi unggah klaim p95', `${p.performance.baseline.p95_ms} ms`, `${p.performance.proposed.p95_ms} ms`],
+      ['Latensi POST /verify p95', '-', `${p.verify.p95_ms} ms`],
+      ['Throughput unggah CSV', '-', `${p.upload.rows_per_sec} baris/detik`]]),
+    h('h3', {}, 'Paparan PII per zona'),
+    tbl(['Zona / layanan', 'Payload baseline', 'Mengandung PII', 'Payload SAMAR', 'Mengandung PII'], Object.keys(pii.baseline.services).map((k) => [k, pii.baseline.services[k].payloads, pii.baseline.services[k].with_pii, pii.proposed.services[k].payloads, pii.proposed.services[k].with_pii])),
+    h('p', { class: 'muted' }, `Gateway, privacy, dan vault memegang data pribadi by design. ${p.security.rejected}/${p.security.total} percobaan akses tidak sah ditolak; ${p.functional.passed}/${p.functional.total} uji fungsional lulus.`)));
+  const ev = m.evidence_card;
+  box.append(h('div', { class: 'card' }, h('h2', {}, 'Evidence card (eval-kit)'),
+    ev.ran ? h('div', {}, ...['evidence.html', 'evidence-hard.html'].flatMap((f) => [h('h3', {}, f === 'evidence.html' ? 'Set standar' : 'Set hard'),
+      h('iframe', { src: `/api/v1/evaluation/evidence?file=${f}&access_token=${encodeURIComponent(state.token)}`, title: f, class: 'evidence', sandbox: 'allow-scripts' })]),
+      h('h3', {}, 'Temuan keterbatasan otomatis dari kit'), h('ul', { class: 'plain' }, (ev.limitations.length ? ev.limitations : ['(tidak ada butir)']).map((x) => h('li', {}, x))))
+      : h('div', { class: 'msg err' }, `Evidence card belum dibuat: ${ev.reason}`)));
 }
 
 async function viewAudit() {
@@ -164,7 +214,7 @@ async function viewAudit() {
   try {
     const { items } = await api('/audit?limit=100');
     box.append(h('div', { class: 'card' }, h('h2', {}, 'Log audit (100 terbaru)'), h('div', { class: 'table-wrap' }, h('table', {}, h('tr', {}, ['#', 'Waktu', 'Aksi', 'Status', 'Aktor', 'Kasus/target', 'Alasan', 'Hash'].map((x) => h('th', {}, x))),
-      items.map((a) => h('tr', {}, h('td', {}, a.seq), h('td', {}, fmtTime(a.ts_ms)), h('td', {}, a.action), h('td', {}, a.status), h('td', {}, `${a.actor ?? '-'}${a.actor_role ? ` (${a.actor_role})` : ''}`), h('td', { class: 'mono' }, a.case_id ?? '-'), h('td', {}, a.reason ?? '-'), h('td', { class: 'mono' }, (a.hash ?? '').slice(0, 10))))))));
+      items.map((a) => h('tr', {}, h('td', {}, a.seq), h('td', {}, fmtTime(a.ts_ms)), h('td', {}, a.action), h('td', {}, a.status), h('td', {}, `${a.actor ?? '-'}${a.actor_role ? ` (${a.actor_role})` : ''}`), h('td', { class: 'mono' }, a.case_id ?? '-'), h('td', {}, a.reason ?? (a.justification_len ? `alasan ${a.justification_len} karakter (isi tidak disimpan)` : '-')), h('td', { class: 'mono' }, (a.hash ?? '').slice(0, 10))))))));
   } catch (e) { box.append(h('div', { class: 'card' }, h('div', { class: 'msg err' }, e.message))); }
 }
 
@@ -172,7 +222,7 @@ async function render(msg) {
   renderHeader();
   if (!state.user) return viewLogin(msg);
   if (!state.config) state.config = await fetch('/api/config').then((r) => r.json()).catch(() => ({}));
-  const views = { unggah: viewUnggah, kasus: viewKasus, dashboard: viewDashboard, audit: viewAudit };
+  const views = { unggah: viewUnggah, kasus: viewKasus, dashboard: viewDashboard, audit: viewAudit, evaluasi: viewEvaluasi };
   if (!TABS[state.user.role].some(([id]) => id === state.tab)) state.tab = TABS[state.user.role][0][0];
   return views[state.tab]();
 }
