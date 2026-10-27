@@ -9,7 +9,7 @@ const MODI = ['SELF_REFERRAL', 'PHANTOM_BILLING', 'CLONING', 'UPCODING', 'UNBUND
 
 function headline(m, difficulty) {
   const s = m.detection.summary[difficulty];
-  return table(['Varian', 'precision@1%', 'recall@1%', 'lift@1%', 'rupiah recall@1%', 'PR-AUC', 'ROC-AUC'],
+  return table(['Varian', 'precision@1%', 'recall@1%', 'lift@1%', 'recall nilai dipertanyakan@1%', 'PR-AUC', 'ROC-AUC'],
     Object.entries(VARIANTS).map(([v, name]) => [name, st(s[v].precision_at_1pct), st(s[v].recall_at_1pct), st(s[v].lift_at_1pct, (x) => `${x.toFixed(1)}x`), st(s[v].rupiah_recall_at_1pct), st(s[v].pr_auc, (x) => x.toFixed(3)), st(s[v].roc_auc, (x) => x.toFixed(3))]));
 }
 function perModus(m, difficulty) {
@@ -19,7 +19,7 @@ function perModus(m, difficulty) {
     ...Object.keys(VARIANTS).map((v) => { const c = s[v].per_modus_pooled[x]; return c ? `${pct(c.recall)} [${pct(c.ci95.lo)} - ${pct(c.ci95.hi)}]` : '-'; })]));
 }
 function perRun(m, difficulty) {
-  return table(['Seed', 'Fraud rate', 'Klaim uji', 'Fraud uji', 'precision@1% [CI95]', 'recall@1% [CI95]', 'rupiah recall@1% [CI95]', 'PR-AUC [CI95]'],
+  return table(['Seed', 'Fraud rate', 'Klaim uji', 'Fraud uji', 'precision@1% [CI95]', 'recall@1% [CI95]', 'recall nilai dipertanyakan@1% [CI95]', 'PR-AUC [CI95]'],
     m.detection.runs.filter((r) => r.difficulty === difficulty).map((r) => { const v = r.variants.full; return [r.seed, `${r.fraud_rate_target * 100}%`, v.n_test, v.n_fraud,
       ci(v.ci95.precision_1pct, v.capacity_1pct.precision), ci(v.ci95.recall_1pct, v.capacity_1pct.recall), ci(v.ci95.rupiah_recall_1pct, v.capacity_1pct.rupiah_recall), ci(v.ci95.pr_auc, v.pr_auc)]; }));
 }
@@ -56,10 +56,10 @@ Set hard: upcoding hanya 1,15-1,5x, cloning tersebar 12 hari, unbundling dan sel
 
 ## 4. Ablasi
 Selisih terhadap SAMAR lengkap (rerata antar run), set hard:
-${table(['Varian', 'PR-AUC', 'selisih', 'rupiah recall@1%', 'selisih'], Object.entries(VARIANTS).map(([v, name]) => [name, st(d.summary.hard[v].pr_auc, (x) => x.toFixed(3)), v === 'full' ? '-' : (d.summary.hard[v].pr_auc.mean - d.summary.hard.full.pr_auc.mean).toFixed(3), st(d.summary.hard[v].rupiah_recall_at_1pct), v === 'full' ? '-' : pct(d.summary.hard[v].rupiah_recall_at_1pct.mean - d.summary.hard.full.rupiah_recall_at_1pct.mean)]))}
+${table(['Varian', 'PR-AUC', 'selisih', 'recall nilai dipertanyakan@1%', 'selisih'], Object.entries(VARIANTS).map(([v, name]) => [name, st(d.summary.hard[v].pr_auc, (x) => x.toFixed(3)), v === 'full' ? '-' : (d.summary.hard[v].pr_auc.mean - d.summary.hard.full.pr_auc.mean).toFixed(3), st(d.summary.hard[v].rupiah_recall_at_1pct), v === 'full' ? '-' : pct(d.summary.hard[v].rupiah_recall_at_1pct.mean - d.summary.hard.full.rupiah_recall_at_1pct.mean)]))}
 
 Set standar:
-${table(['Varian', 'PR-AUC', 'selisih', 'rupiah recall@1%', 'selisih'], Object.entries(VARIANTS).map(([v, name]) => [name, st(d.summary.standard[v].pr_auc, (x) => x.toFixed(3)), v === 'full' ? '-' : (d.summary.standard[v].pr_auc.mean - d.summary.standard.full.pr_auc.mean).toFixed(3), st(d.summary.standard[v].rupiah_recall_at_1pct), v === 'full' ? '-' : pct(d.summary.standard[v].rupiah_recall_at_1pct.mean - d.summary.standard.full.rupiah_recall_at_1pct.mean)]))}
+${table(['Varian', 'PR-AUC', 'selisih', 'recall nilai dipertanyakan@1%', 'selisih'], Object.entries(VARIANTS).map(([v, name]) => [name, st(d.summary.standard[v].pr_auc, (x) => x.toFixed(3)), v === 'full' ? '-' : (d.summary.standard[v].pr_auc.mean - d.summary.standard.full.pr_auc.mean).toFixed(3), st(d.summary.standard[v].rupiah_recall_at_1pct), v === 'full' ? '-' : pct(d.summary.standard[v].rupiah_recall_at_1pct.mean - d.summary.standard.full.rupiah_recall_at_1pct.mean)]))}
 
 "Tanpa fitur lintas faskes" membatasi riwayat token ke faskes yang sama (meniru sistem tanpa token lintas faskes), lalu detektor dan model dilatih ulang dengan fitur itu.
 
@@ -77,7 +77,7 @@ Catatan baca: recall per modus di set hard tinggi sebagian besar karena model su
 |---|---|---|
 ${['full', 'no_rules', 'no_cross', 'no_ml'].map((v) => `| ${VARIANTS[v]} | ${ho('standard', v)} | ${ho('hard', v)} |`).join('\n')}
 
-Catatan baca: pada set hard klaim ulang ditagih 38 hari setelah klaim pertama, di luar jendela 30 hari detektor dan di luar jendela fitur lintas faskes (30 hari), jadi tidak ada fitur yang bisa melihatnya. Recall 0% di sana adalah celah cakupan yang memang dibuat, bukan bukti model gagal menggeneralisasi; perbaikannya memperlebar jendela dan mengukur ulang.
+Catatan baca (perbaikan T4): sebelum perbaikan jendela REPEAT_BILLING 30 hari; recall hold-out di set hard 0% (0 dari 37) pada semua varian karena klaim ulang di set hard ditagih 38 hari setelah klaim pertama, di luar jendela. Setelah jendela dilebarkan menjadi 90 hari angka itu naik, tetapi kenaikan ini by construction: jarak 38 hari dibuat generator dan kini berada di dalam jendela. Itu bukan bukti generalisasi. Ukuran generalisasi yang lebih jujur adalah varian "Tanpa aturan (ML saja)", yang tetap 0% karena model supervised tidak pernah melihat modus ini dan tidak ada aturan yang menangkapnya. Klaim ulang dengan jarak lebih dari 90 hari tetap lolos.
 
 "Tanpa aturan (ML saja)" adalah ukuran generalisasi sebenarnya ke modus yang tidak dilihat model; pada varian lengkap, detektor aturan klaim berulang tetap menangkapnya karena aturan itu memang ada.
 
@@ -122,7 +122,7 @@ Set hard:
 ${kit.hard_limitations.map((x) => `- ${x}`).join('\n')}` : `Tidak dibuat: ${kit.reason}`}
 
 ## 12. Simulasi dampak
-Masukan skenario rupiah recall: rendah ${pct(m.impact_inputs.rupiah_recall.low)}, sedang ${pct(m.impact_inputs.rupiah_recall.mid)}, tinggi ${pct(m.impact_inputs.rupiah_recall.high)} (${m.impact_inputs.source}). Fraud rate, recovery rate, dan nilai klaim cabang adalah asumsi; hasil ada di halaman Evaluasi dan \`GET /impact/scenarios\`.
+Masukan skenario recall nilai dipertanyakan: rendah ${pct(m.impact_inputs.rupiah_recall.low)}, sedang ${pct(m.impact_inputs.rupiah_recall.mid)}, tinggi ${pct(m.impact_inputs.rupiah_recall.high)} (${m.impact_inputs.source}). Fraud rate, recovery rate, dan nilai klaim cabang adalah asumsi; hasil ada di halaman Evaluasi dan \`GET /impact/scenarios\`.
 `;
 }
 
@@ -157,7 +157,7 @@ export function readmeBlock(m) {
   const d = m.detection; const p = m.stack; const pr = m.protocol;
   const ho = (diff, v) => (d.holdout[diff][v] ? `${pct(d.holdout[diff][v].recall)} (n=${d.holdout[diff][v].n}, CI95 ${pct(d.holdout[diff][v].ci95.lo)}-${pct(d.holdout[diff][v].ci95.hi)})` : '-');
   const row = (diff, v) => { const x = d.summary[diff][v]; return [VARIANTS[v], st(x.precision_at_1pct), st(x.recall_at_1pct), st(x.rupiah_recall_at_1pct), x.pr_auc.mean.toFixed(3), x.roc_auc.mean.toFixed(3)]; };
-  const head = ['Varian', 'precision@1%', 'recall@1%', 'rupiah recall@1%', 'PR-AUC', 'ROC-AUC'];
+  const head = ['Varian', 'precision@1%', 'recall@1%', 'recall nilai dipertanyakan@1%', 'PR-AUC', 'ROC-AUC'];
   return `Sumber: \`reports/metrics.json\` (dibuat ${m.generated_at.slice(0, 10)} oleh \`npm run evaluate\`). ${pr.seeds.length} seed x fraud rate ${pr.fraud_rates.map((x) => `${x * 100}%`).join('/')} x 2 tingkat kesulitan; latih bulan 1-4, uji bulan 5-6; kapasitas review 1% klaim (asumsi). Angka = rerata (min-maks) antar ${d.summary.standard.n_runs} run per tingkat.
 
 **Set hard (skenario lebih sulit, angka utama):**

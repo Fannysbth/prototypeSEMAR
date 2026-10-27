@@ -44,7 +44,8 @@ Browser (web/) -> Gateway -+-> Auth
 - **Token** konsisten lintas faskes (faskes tidak ikut dalam rumus), berbeda per layanan dan tujuan, dan berotasi per epoch.
 - **Deteksi**: 7 detektor aturan + Isolation Forest + model supervised, digabung dengan noisy-OR (`config/weights.json`). Skor >= 45 membuat kasus. Fitur lintas faskes dihitung per token (`services/fraud/engine.js`).
 - **Penjelasan**: LLM hanya menerima token, kode diagnosis, angka, dan alasan detektor, setelah penyaring PII. Tanpa `LLM_API_KEY` atau saat LLM gagal, dipakai templat aturan (`explanation_source` menunjukkan sumbernya).
-- **Manusia memutuskan**: status kasus, reveal identitas (auditor, wajib alasan, ada kuota), revoke (admin), dan ubah ambang tercatat di audit log.
+- **Manusia memutuskan**: status kasus, minta berkas ke faskes dan eskalasi (verifikator), reveal identitas (hanya auditor, wajib alasan, ada kuota), revoke (admin), dan ubah ambang tercatat di audit log. Verifikator tidak punya aksi reveal.
+- **Nilai di kasus** disebut "potensi nilai dipertanyakan (estimasi)", bukan kerugian; rumusnya per modus ada di tooltip dan di `docs/01-prd.md`.
 - Spesifikasi lengkap ada di `docs/` (mulai dari `docs/01-prd.md` dan `docs/02-arsitektur.md`).
 
 ## Hasil evaluasi
@@ -54,16 +55,16 @@ Sumber: `reports/metrics.json` (dibuat 2026-10-27 oleh `npm run evaluate`). 3 se
 
 **Set hard (skenario lebih sulit, angka utama):**
 
-| Varian | precision@1% | recall@1% | rupiah recall@1% | PR-AUC | ROC-AUC |
+| Varian | precision@1% | recall@1% | recall nilai dipertanyakan@1% | PR-AUC | ROC-AUC |
 |---|---|---|---|---|---|
-| SAMAR lengkap | 83.8% (47.6% - 100.0%) | 57.4% (33.3% - 85.0%) | 54.8% (23.8% - 85.1%) | 0.786 | 0.914 |
-| Tanpa ML (aturan saja) | 70.9% (38.1% - 95.2%) | 46.7% (29.3% - 75.0%) | 45.6% (26.4% - 73.5%) | 0.553 | 0.787 |
+| SAMAR lengkap | 86.2% (57.1% - 100.0%) | 61.0% (33.3% - 100.0%) | 58.3% (23.8% - 100.0%) | 0.922 | 0.996 |
+| Tanpa ML (aturan saja) | 82.9% (47.6% - 100.0%) | 56.1% (33.3% - 83.3%) | 67.3% (51.7% - 79.7%) | 0.719 | 0.868 |
 | Tanpa aturan (ML saja) | 82.2% (47.6% - 100.0%) | 56.9% (30.2% - 85.0%) | 51.9% (19.1% - 85.1%) | 0.733 | 0.906 |
-| Tanpa fitur lintas faskes | 75.6% (38.1% - 100.0%) | 48.5% (33.3% - 66.7%) | 45.2% (24.0% - 68.7%) | 0.561 | 0.773 |
+| Tanpa fitur lintas faskes | 81.4% (47.6% - 100.0%) | 55.2% (33.3% - 83.3%) | 51.0% (24.0% - 83.6%) | 0.699 | 0.855 |
 
 **Set standar (pola fraud mirip generator; cenderung optimistis):**
 
-| Varian | precision@1% | recall@1% | rupiah recall@1% | PR-AUC | ROC-AUC |
+| Varian | precision@1% | recall@1% | recall nilai dipertanyakan@1% | PR-AUC | ROC-AUC |
 |---|---|---|---|---|---|
 | SAMAR lengkap | 87.0% (60.0% - 100.0%) | 69.4% (37.5% - 100.0%) | 75.7% (45.4% - 100.0%) | 1.000 | 1.000 |
 | Tanpa ML (aturan saja) | 87.0% (60.0% - 100.0%) | 69.4% (37.5% - 100.0%) | 75.7% (45.6% - 100.0%) | 1.000 | 1.000 |
@@ -71,9 +72,9 @@ Sumber: `reports/metrics.json` (dibuat 2026-10-27 oleh `npm run evaluate`). 3 se
 | Tanpa fitur lintas faskes | 76.3% (40.0% - 100.0%) | 54.8% (37.5% - 71.4%) | 67.9% (43.4% - 96.7%) | 0.672 | 0.843 |
 
 - Ablasi: baris "Tanpa fitur lintas faskes", "Tanpa ML", dan "Tanpa aturan" membandingkan kontribusi tiap komponen terhadap SAMAR lengkap.
-- Modus hold-out REPEAT_BILLING (tidak dipakai melatih model supervised), recall pada ambang kasus: SAMAR lengkap 100.0% (n=27, CI95 87.5%-100.0%) (standar) dan 0.0% (n=37, CI95 0.0%-9.4%) (hard); **ML saja** 0.0% (n=27, CI95 0.0%-12.5%) (standar) dan 0.0% (n=37, CI95 0.0%-9.4%) (hard).
+- Modus hold-out REPEAT_BILLING (tidak dipakai melatih model supervised), recall pada ambang kasus: SAMAR lengkap 100.0% (n=27, CI95 87.5%-100.0%) (standar) dan 100.0% (n=37, CI95 90.6%-100.0%) (hard); **ML saja** 0.0% (n=27, CI95 0.0%-12.5%) (standar) dan 0.0% (n=37, CI95 0.0%-9.4%) (hard).
 - Paritas deteksi baseline vs SAMAR: 387/387 klaim identik (100.0%). Payload di zona token yang memuat data pribadi: 100% menjadi 0%.
-- Latensi POST /verify p95 22.1 ms; throughput unggah CSV 153.3 baris/detik (satu mesin, penyimpanan memori).
+- Latensi POST /verify p95 31.6 ms; throughput unggah CSV 321 baris/detik (satu mesin, penyimpanan memori).
 - Keamanan: 23/23 percobaan akses tidak sah ditolak; fungsional 9/9 lulus.
 - Evidence card eval-kit: `reports/evidence.html` dan `reports/evidence-hard.html` (6 butir keterbatasan otomatis dari kit, lihat `reports/evaluation.md`).
 
@@ -87,13 +88,22 @@ Laporan lengkap: `reports/evaluation.md`. Kartu data: `reports/data-card.md`. Ha
 
 - **Data sintetis, label dari generator.** Angka membuktikan mekanisme, bukan akurasi pada data JKN riil. Generator dan detektor ditulis oleh pihak yang sama; set standar cenderung optimistis. Karena itu set hard (fraud lebih halus, hard negatives tambahan, satu modus tanpa detektor aturan) ditampilkan berdampingan.
 - **Kapasitas review 1% klaim adalah asumsi**, bukan kapasitas verifikator BPJS. Pada fraud rate 3% recall@1% dibatasi oleh kapasitas.
-- **Recall per modus di set hard tinggi sebagian karena model supervised dilatih dari label generator yang sama.** Ukuran generalisasi yang lebih jujur adalah modus hold-out; hasilnya rendah (lihat blok hasil), dan penyebabnya dijelaskan di `reports/evaluation.md`.
+- **Recall per modus di set hard tinggi sebagian karena model supervised dilatih dari label generator yang sama.** Ukuran generalisasi yang lebih jujur adalah modus hold-out dengan **ML saja**, yang 0% (lihat blok hasil). Recall hold-out SAMAR lengkap di set hard naik dari 0% (jendela 30 hari) menjadi 100% setelah jendela REPEAT_BILLING dilebarkan ke 90 hari, tetapi kenaikan itu by construction (jarak klaim ulang dibuat generator 38 hari), bukan generalisasi; klaim ulang di luar 90 hari tetap lolos. Penjelasan di `reports/evaluation.md`.
 - **Jumlah fraud di set uji kecil** (puluhan per run), sehingga selang kepercayaan lebar. Recall modus hold-out dihitung dari gabungan 6 run.
 - **Simulasi dampak rupiah** memakai rupiah recall dari evaluasi dan biaya pilot dari `docs/07-model-bisnis.md`. Fraud rate, recovery rate, dan nilai klaim cabang adalah asumsi. Itu bukan penghematan nyata.
 - Latensi dan throughput diukur di satu mesin, penyimpanan memori, tanpa LLM eksternal.
 - Mode Docker: image ml dibangun dan diuji sendiri (model siap, versi sama dengan ml lokal). `docker compose up` penuh (db + samar + ml) belum saya jalankan ujung ke ujung. Mode ini tidak dipakai untuk pengukuran evaluasi.
 - Token berlaku dalam satu epoch (default 30 hari); rotasi memutus tautan lintas epoch. Privacy Service adalah titik terpusat (roadmap: KMS/HSM, persetujuan dua orang untuk reveal).
 - Dipotong dari T2: modul faskes cek mandiri, ekspor PDF (cukup CSV), persetujuan kedua reveal, webhook notify.
+
+## Posisi terhadap sistem BPJS yang ada
+
+SAMAR **melengkapi, bukan menggantikan**, sistem yang sudah dipakai BPJS Kesehatan seperti Voltage (tokenisasi), FRISTA, VIDI, dan SIGAP. SAMAR tidak mengklaim masalah ini belum punya solusi. Yang ditambahkan:
+
+- token yang konsisten lintas faskes untuk satu tujuan, berbeda antar tujuan, berotasi, dan bisa dicabut, dipakai untuk deteksi lintas faskes;
+- pemisahan peran pada alur kasus: verifikator menilai dari pola dan tidak punya aksi buka identitas; ia meminta berkas ke faskes atau eskalasi ke auditor.
+
+Integrasi lewat adaptor API (misalnya adaptor `voltage` sebagai mesin token): **rencana, belum terhubung** ke sistem BPJS mana pun. Di sistem nyata data klaim berasal dari sistem klaim BPJS (VClaim, PCare) lewat API; unggah CSV di prototype ini hanya jalur pilot.
 
 ## Pemeriksaan keamanan
 

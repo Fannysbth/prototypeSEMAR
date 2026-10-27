@@ -19,8 +19,10 @@ import { createClients } from './clients.js';
 import { createPipeline, ensureMode } from './pipeline.js';
 import { buildClaimSchema, caseQuerySchema, loginSchema, reviewSchema, revealSchema, revokeSchema, statusSchema, thresholdSchema } from './schemas.js';
 import { runScenario, scenarioList } from './simulate.js';
-import { createUploader } from './upload.js';
+import { createUploader, viewBatch } from './upload.js';
 import { createExplainer } from './explain.js';
+import { createWorkflow, REPLY_PATH } from './workflow.js';
+import { createHome } from './home.js';
 import { impactSchema, impactScenarios, simulateImpact } from './impact.js';
 import { buildVerifySchema, toPipelineClaim, toVerifyResponse } from './verify.js';
 
@@ -31,12 +33,13 @@ const pipeline = createPipeline({ config, clients, logger });
 const store = await createStore({ driver: config.store.driver, namespace: 'gateway', dataDir: config.store.dataDir, databaseUrl: config.store.databaseUrl, logger });
 const claimSchema = buildClaimSchema({ syntheticOnly: config.syntheticOnly });
 const verifySchema = buildVerifySchema({ syntheticOnly: config.syntheticOnly });
-const uploader = createUploader({ claimSchema, pipeline, batches: await store.collection('batches'), mode: 'proposed' });
+const uploader = createUploader({ claimSchema, pipeline, batches: await store.collection('batches', { indexes: ['uploaded_by'], numericIndexes: ['created_ms'] }), mode: 'proposed' });
+const workflow = createWorkflow({ clients, requests: await store.collection('file_requests', { indexes: ['facility_id', 'case_id'], numericIndexes: ['created_ms'] }) });
 const explainer = createExplainer({ llm: config.llm, screen: (text) => clients.privacy.screen(text) });
 const webDir = path.join(ROOT, 'web');
 const swaggerDir = path.dirname(createRequire(import.meta.url).resolve('swagger-ui-dist/package.json'));
 
-const app = createBaseApp({ service: 'gateway', config });
+const app = createBaseApp({ service: 'gateway', config, bigJson: [{ test: REPLY_PATH, limit: '300kb' }] });
 app.use((req, res, next) => { if (req.url.startsWith('/api/v1/')) req.url = req.url.replace('/api/v1/', '/api/'); next(); });
 app.use(helmet({
   contentSecurityPolicy: { useDefaults: true, directives: { 'script-src': ["'self'"], 'style-src': ["'self'"], 'connect-src': ["'self'", ...(config.allowedOrigin ? config.allowedOrigin.split(',') : [])], 'upgrade-insecure-requests': config.isProd ? [] : null } },
@@ -76,6 +79,7 @@ const serviceStatus = async () => {
   const names = ['auth', 'privacy', 'claims', 'fraud', 'notify'];
   return Object.fromEntries(await Promise.all(names.map(async (n) => [n, await clients.health(n)])));
 };
+const home = createHome({ clients, uploader, workflow, config, serviceStatus });
 app.get('/api/ready', asyncHandler(async (req, res) => {
   const status = await serviceStatus();
   res.status(Object.values(status).every(Boolean) ? 200 : 503).json({ ready: Object.values(status).every(Boolean), services: status });
@@ -100,17 +104,23 @@ app.post('/api/claims', authenticate, requireRole('facility'), asyncHandler(asyn
 }));
 app.post('/api/claims/upload', authenticate, requireRole(...FACILITY_ROLES), express.text({ type: 'text/csv', limit: '20mb' }), asyncHandler(async (req, res) => {
   if (typeof req.body !== 'string') throw new HttpError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Kirim CSV dengan Content-Type: text/csv');
-  res.json(await uploader.upload({ csv: req.body, user: req.user, requestId: req.id }));
+  const asyncMode = req.query.async === 'true';
+  const batch = await uploader.upload({ csv: req.body, user: req.user, requestId: req.id, async: asyncMode });
+  res.status(asyncMode ? 202 : 200).json(viewBatch(batch, req.user.role));
 }));
 app.get('/api/claims/batches/:id', authenticate, requireRole(...FACILITY_ROLES), asyncHandler(async (req, res) => {
   const b = await uploader.get(req.params.id);
   if (!b || b.uploaded_by !== req.user.sub) throw new HttpError(404, 'NOT_FOUND', 'Batch tidak ditemukan');
-  res.json(b);
+  res.json(viewBatch(b, req.user.role));
 }));
 app.get('/api/claims', authenticate, requireRole(...FACILITY_ROLES), asyncHandler(async (req, res) => {
   const q = req.user.role === 'facility' ? `?facility_id=${encodeURIComponent(req.user.facility_id)}&limit=50` : '?limit=50';
   res.json(await clients.claims.list(q));
 }));
+
+// ---------- beranda per peran dan daftar klaim ter-token ----------
+app.get('/api/home', authenticate, asyncHandler(async (req, res) => res.json(await home.build(req.user))));
+app.get('/api/claims/tokenized', authenticate, requireRole('verifier', 'auditor', 'admin'), asyncHandler(async (req, res) => res.json(await home.tokenized(req.query))));
 
 // ---------- /verify: skor satu klaim secara sinkron ----------
 app.post('/api/verify', verifyLimiter, authenticate, requireRole('verifier', 'admin'), asyncHandler(async (req, res) => {
@@ -146,6 +156,17 @@ app.post('/api/cases/:id/explain', authenticate, requireRole(...REVIEWERS), asyn
   const r = await explainer.explain(c);
   await clients.fraud.setExplanation(c.case_id, { text: r.text, source: r.source });
   res.json({ case_id: c.case_id, explanation: r.text, explanation_source: r.source, ...(r.note ? { note: r.note } : {}) });
+}));
+// ---------- alur tanpa membuka identitas: minta berkas ke faskes, balasan faskes, eskalasi ----------
+app.post('/api/cases/:id/request-file', authenticate, requireRole('verifier'), asyncHandler(async (req, res) => res.status(201).json(await workflow.requestFile({ caseId: req.params.id, body: req.body, user: req.user, requestId: req.id }))));
+app.post('/api/cases/:id/escalate', authenticate, requireRole('verifier'), asyncHandler(async (req, res) => res.json(await workflow.escalate({ caseId: req.params.id, body: req.body, user: req.user, requestId: req.id }))));
+app.get('/api/file-requests', authenticate, requireRole('facility', 'verifier', 'auditor'), asyncHandler(async (req, res) => res.json({ items: await workflow.list({ user: req.user, caseId: req.query.case_id ? String(req.query.case_id) : undefined }) })));
+app.post('/api/file-requests/:id/reply', authenticate, requireRole('facility'), asyncHandler(async (req, res) => res.json(await workflow.reply({ id: req.params.id, body: req.body, user: req.user, requestId: req.id }))));
+app.get('/api/file-requests/:id/attachment', authenticate, requireRole('auditor'), asyncHandler(async (req, res) => {
+  const a = await workflow.attachment(req.params.id);
+  res.setHeader('Content-Security-Policy', 'sandbox');
+  res.setHeader('Content-Disposition', `attachment; filename="${a.name.replace(/[^\w.\- ]/g, '_')}"`);
+  res.type('application/octet-stream').send(a.bytes);
 }));
 app.post('/api/cases/:id/reveal', authenticate, requireRole('auditor'), asyncHandler(async (req, res) => {
   const { justification } = revealSchema.parse(req.body);
@@ -184,7 +205,7 @@ app.get('/api/dashboard/summary', authenticate, requireRole('verifier', 'auditor
   const [claims, fraud, privacy] = await Promise.all([clients.claims.stats(), clients.fraud.stats(), clients.privacy.stats()]);
   res.json({
     claims_total: claims.total, cases_total: fraud.total_cases, cases_by_level: fraud.by_level, cases_by_modus: fraud.by_modus, cases_by_facility: fraud.by_facility,
-    cases_by_status: fraud.by_status, excess_total_estimate: fraud.excess_total, review_precision: fraud.review_precision,
+    cases_by_status: fraud.by_status, potensi_nilai_dipertanyakan_total: fraud.potensi_nilai_dipertanyakan_total, review_precision: fraud.review_precision,
     tokens_active: privacy.tokens_active, tokens_revoked: privacy.tokens_revoked, reveal_success: privacy.reidentify_success, reveal_denied: privacy.reidentify_denied,
   });
 }));
@@ -194,10 +215,10 @@ app.get('/api/stats', authenticate, requireRole('verifier', 'auditor', 'admin'),
 }));
 app.post('/api/impact/simulate', authenticate, requireRole('auditor', 'admin'), (req, res) => res.json(simulateImpact(impactSchema.parse(req.body))));
 
-const CASE_COLUMNS = ['case_id', 'claim_id', 'subject_token', 'facility_id', 'facilities', 'diagnosis_code', 'amount', 'risk_score', 'risk_level', 'modus', 'status', 'excess_amount', 'created'];
+const CASE_COLUMNS = ['case_id', 'claim_id', 'subject_token', 'facility_id', 'facilities', 'diagnosis_code', 'amount', 'risk_score', 'risk_level', 'modus', 'status', 'potensi_nilai_dipertanyakan', 'created'];
 const caseRows = (items) => items.map((c) => ({
   case_id: c.case_id, claim_id: c.claim_id, subject_token: c.fraud_ref, facility_id: c.facility_id, facilities: c.facilities.join('|'), diagnosis_code: c.diagnosis_code,
-  amount: c.amount, risk_score: c.risk_score, risk_level: c.risk_level, modus: c.modi.join('|'), status: c.status, excess_amount: c.excess_amount, created: new Date(c.created_ms).toISOString(),
+  amount: c.amount, risk_score: c.risk_score, risk_level: c.risk_level, modus: c.modi.join('|'), status: c.status, potensi_nilai_dipertanyakan: c.potensi_nilai_dipertanyakan, created: new Date(c.created_ms).toISOString(),
 }));
 app.get('/api/reports/cases.csv', authenticate, requireRole('auditor'), asyncHandler(async (req, res) => {
   const { items } = await clients.fraud.cases('?limit=2000');

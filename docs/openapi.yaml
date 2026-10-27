@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: SAMAR API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     Deteksi fraud klaim JKN lintas faskes di atas data terpseudonimisasi. Data contoh sintetis.
     Sistem tidak menjatuhkan keputusan fraud: keluaran berupa skor, alasan, dan prioritas review.
@@ -66,21 +66,27 @@ components:
         risk_score: { type: integer }
         risk_level: { type: string, enum: [LOW, MEDIUM, HIGH] }
         modi: { type: array, items: { type: string } }
-        status: { type: string, enum: [BARU, DITINJAU, BUTUH_INFO, TERKONFIRMASI, DITOLAK_FALSE_POSITIVE, SELESAI] }
+        status: { type: string, enum: [BARU, DITINJAU, BUTUH_INFO, MENUNGGU_FASKES, ESKALASI, TERKONFIRMASI, DITOLAK_FALSE_POSITIVE, SELESAI] }
         facilities: { type: array, items: { type: string } }
-        excess_amount: { type: number, description: Estimasi rupiah berlebih dari aturan, bukan angka audit }
+        potensi_nilai_dipertanyakan: { type: number, description: 'Potensi nilai dipertanyakan (estimasi) dalam rupiah, dari aturan deteksi. Bukan kerugian: baru menjadi kerugian bila kasus terkonfirmasi dan klaim ditahan atau ditagih kembali. Rumus: klaim ganda = tagihan klaim kedua; upcoding = selisih terhadap median tarif diagnosis yang sama; lama rawat berlebih = porsi tagihan hari di atas rata-rata' }
         explanation: { type: string }
         explanation_source: { type: string, enum: [llm, template] }
         ml_status: { type: string }
         created_ms: { type: integer }
     Batch:
       type: object
+      description: |
+        Status batch bertahap. Peran faskes hanya melihat tiga tahap (validasi, tokenisasi, selesai) tanpa skor, sinyal, atau jumlah kasus;
+        verifikator, auditor, dan admin melihat lima tahap (validasi, tokenisasi, fitur_lintas_faskes, deteksi, kasus) beserta `cases`, `analyzed`, `flagged`, `cross_facility`.
       properties:
         batch_id: { type: string }
+        status: { type: string, enum: [DIPROSES, SELESAI, GAGAL] }
         total: { type: integer }
         accepted: { type: integer }
         rejected: { type: integer }
-        cases: { type: integer }
+        cases: { type: integer, description: Hanya untuk verifikator, auditor, admin }
+        stages: { type: array, items: { type: object, properties: { id: { type: string }, label: { type: string }, count: { type: integer }, detail: { type: string } } } }
+        preview: { type: array, description: 20 baris pertama; NIK disamarkan, items: { type: object, properties: { row: { type: integer }, claim_ref: { type: string }, facility_id: { type: string }, patient_hint: { type: string }, admit_date: { type: string }, diagnosis_code: { type: string }, amount: { type: number } } } }
         errors: { type: array, items: { type: object, properties: { row: { type: integer }, message: { type: string } } } }
 paths:
   /auth/login:
@@ -104,12 +110,15 @@ paths:
       description: |
         Body mentah `text/csv`. Header memakai nama prototype atau kode BPJS (PSTV01, FKL02, FKL47; lihat config/column-map.json).
         Validasi per baris; baris gagal dilaporkan dengan nomor baris (header = baris 1).
+      parameters:
+        - { name: async, in: query, schema: { type: boolean }, description: 'true: balas 202 segera dan proses di latar; ikuti kemajuan lewat GET /claims/batches/{id}' }
       requestBody:
         content:
           text/csv:
             schema: { type: string }
       responses:
-        '200': { description: Hasil batch, content: { application/json: { schema: { $ref: '#/components/schemas/Batch' } } } }
+        '200': { description: Hasil batch (sinkron), content: { application/json: { schema: { $ref: '#/components/schemas/Batch' } } } }
+        '202': { description: Batch diterima dan sedang diproses (async=true), content: { application/json: { schema: { $ref: '#/components/schemas/Batch' } } } }
         '415': { description: Content-Type bukan text/csv }
   /claims/batches/{id}:
     parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
@@ -143,8 +152,57 @@ paths:
       responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } } } }
     patch:
       summary: Ubah status kasus (tercatat di case_events dan audit)
-      requestBody: { content: { application/json: { schema: { type: object, required: [status], properties: { status: { type: string, enum: [BARU, DITINJAU, BUTUH_INFO, TERKONFIRMASI, DITOLAK_FALSE_POSITIVE, SELESAI] }, note: { type: string } } } } } }
+      requestBody: { content: { application/json: { schema: { type: object, required: [status], properties: { status: { type: string, enum: [BARU, DITINJAU, BUTUH_INFO, MENUNGGU_FASKES, ESKALASI, TERKONFIRMASI, DITOLAK_FALSE_POSITIVE, SELESAI] }, note: { type: string } } } } } }
       responses: { '200': { description: OK }, '400': { description: Status tidak dikenal } }
+  /cases/{id}/request-file:
+    parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+    post:
+      summary: Minta berkas ke faskes berdasarkan nomor klaim (verifikator). Status kasus menjadi MENUNGGU_FASKES
+      description: Catatan disaring PII (NIK atau nama ditolak 400). Tercatat di case_events dan audit (FILE_REQUEST). Verifikator tidak punya akses reveal.
+      requestBody: { content: { application/json: { schema: { type: object, required: [note], properties: { note: { type: string, minLength: 5, maxLength: 500 } } } } } }
+      responses: { '201': { description: Permintaan dibuat }, '400': { description: Catatan memuat data pribadi atau tidak valid }, '403': { description: Peran tidak berhak } }
+  /cases/{id}/escalate:
+    parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+    post:
+      summary: Eskalasi kasus ke auditor (verifikator). Status kasus menjadi ESKALASI
+      description: Hanya auditor yang bisa membuka identitas. Tercatat di case_events dan audit (CASE_ESCALATE).
+      requestBody: { content: { application/json: { schema: { type: object, required: [note], properties: { note: { type: string, minLength: 5, maxLength: 500 } } } } } }
+      responses: { '200': { description: OK }, '400': { description: Catatan memuat data pribadi }, '403': { description: Peran tidak berhak } }
+  /file-requests:
+    get:
+      summary: Permintaan berkas. Faskes melihat milik faskesnya (tanpa skor atau modus); verifikator dan auditor melihat semua
+      parameters: [ { name: case_id, in: query, schema: { type: string } } ]
+      responses: { '200': { description: '{ items: [{ request_id, claim_id, note, status, created_ms, reply }] }' } }
+  /file-requests/{id}/reply:
+    parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+    post:
+      summary: Faskes membalas permintaan dengan catatan dan/atau lampiran kecil (maks 200 KB; pdf, png, jpg, txt)
+      description: Catatan dan lampiran txt disaring PII. Status kasus kembali DITINJAU. Tercatat di audit (FILE_REPLY).
+      requestBody: { content: { application/json: { schema: { type: object, required: [note], properties: { note: { type: string }, attachment: { type: object, properties: { name: { type: string }, content_base64: { type: string } } } } } } } }
+      responses: { '200': { description: OK }, '400': { description: PII atau jenis lampiran tidak valid }, '404': { description: Bukan permintaan faskes ini }, '409': { description: Sudah dibalas }, '413': { description: Lampiran lebih dari 200 KB } }
+  /file-requests/{id}/attachment:
+    parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+    get:
+      summary: Unduh lampiran balasan faskes (hanya auditor)
+      responses: { '200': { description: Berkas }, '403': { description: Peran tidak berhak }, '404': { description: Tidak ada lampiran } }
+  /home:
+    get:
+      summary: Ringkasan beranda sesuai peran pemanggil (faskes, verifikator, auditor, admin)
+      responses: { '200': { description: Bentuk berbeda per peran; tanpa identitas } }
+  /claims/tokenized:
+    get:
+      summary: Daftar klaim ter-token (verifikator, auditor, admin)
+      description: Token ditampilkan sebagian. Filter dan pencarian atas nomor klaim atau token.
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: facility, in: query, schema: { type: string } }
+        - { name: diagnosis, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: min_score, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer, maximum: 500 } }
+      responses: { '200': { description: '{ total, items: [{ claim_id, token, facility_id, admit_date, diagnosis_code, amount, score, risk_level, case_id, status }] }' } }
   /cases/{id}/explain:
     parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
     post:

@@ -6,14 +6,21 @@ Basis: `http://localhost:3000/api/v1`. Autentikasi `Authorization: Bearer <JWT>`
 |---|---|---|---|
 | POST | /auth/login | semua | Masuk, dapat JWT (15 menit) |
 | GET | /me | semua | Profil dan peran |
-| POST | /claims/upload | faskes, verifikator | Unggah CSV (multipart). Balikan `batch_id`, jumlah diterima/ditolak |
-| GET | /claims/batches/{id} | faskes, verifikator | Status batch dan baris gagal |
+| POST | /claims/upload | faskes, verifikator | Unggah CSV (`text/csv`). `?async=true` membalas 202 segera; tanpa itu menunggu selesai. Balikan `batch_id`, `status`, `stages`, `preview` (20 baris, NIK disamarkan), baris gagal. Faskes hanya mendapat 3 tahap, tanpa skor atau jumlah kasus |
+| GET | /claims/batches/{id} | faskes, verifikator | Status batch bertahap (polling): `DIPROSES`, `SELESAI`, `GAGAL`; tahap dan angka tiap tahap. Hanya milik pengunggah |
+| GET | /claims/tokenized | verifikator, auditor, admin | Daftar klaim ter-token (token sebagian). Filter `q`, `facility`, `diagnosis`, `status`, `from`, `to`, `min_score`, `limit` |
+| GET | /home | semua | Ringkasan beranda sesuai peran pemanggil |
 | POST | /verify | sistem, verifikator | Skor satu klaim secara sinkron |
 | GET | /cases | verifikator, auditor | Daftar kasus. Filter: `risk`, `modus`, `status`, `faskes`, `from`, `to` |
 | GET | /cases/{id} | verifikator, auditor | Detail kasus, alasan, riwayat token lintas faskes |
 | PATCH | /cases/{id} | verifikator, auditor | Ubah status, catatan |
 | POST | /cases/{id}/explain | verifikator, auditor | Buat ulang penjelasan (LLM atau templat) |
-| POST | /cases/{id}/reveal | auditor | Buka identitas. Wajib `reason` (min 20 karakter). Kena kuota |
+| POST | /cases/{id}/request-file | verifikator | Minta berkas ke faskes lewat nomor klaim. Status `MENUNGGU_FASKES`. Catatan disaring PII. Audit `FILE_REQUEST` |
+| POST | /cases/{id}/escalate | verifikator | Eskalasi ke auditor. Status `ESKALASI`. Audit `CASE_ESCALATE` |
+| GET | /file-requests | faskes, verifikator, auditor | Permintaan berkas. Faskes hanya milik faskesnya, tanpa skor atau modus |
+| POST | /file-requests/{id}/reply | faskes | Balasan: catatan (disaring PII) dan lampiran opsional maks 200 KB (pdf, png, jpg, txt). Kasus kembali `DITINJAU`. Audit `FILE_REPLY` |
+| GET | /file-requests/{id}/attachment | auditor | Unduh lampiran balasan |
+| POST | /cases/{id}/reveal | auditor | Buka identitas. Wajib `reason` (min 20 karakter). Kena kuota. Verifikator tidak punya akses ini |
 | POST | /tokens/revoke | admin | Cabut token peserta |
 | POST | /keys/rotate | admin | Mulai epoch baru |
 | GET | /dashboard/summary | verifikator, auditor, admin | Ringkasan angka |

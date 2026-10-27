@@ -7,7 +7,7 @@ import { performance } from 'node:perf_hooks';
 import { HttpError } from '../../shared/http.js';
 
 export function createPipeline({ config, clients, logger }) {
-  async function submitClaim({ claim, facility_id, mode, actor, idempotencyKey, requestId, claimId, allowDuplicate = false }) {
+  async function submitClaim({ claim, facility_id, mode, actor, idempotencyKey, requestId, claimId, allowDuplicate = false, onStage }) {
     const t0 = performance.now();
     const timings = {};
     const claim_id = claimId ?? (idempotencyKey
@@ -25,6 +25,7 @@ export function createPipeline({ config, clients, logger }) {
         clients.privacy.minimize({ service: 'FRAUD_DETECTION', record: raw, actor: by }, requestId),
       ]);
       timings.privacy_ms = +(performance.now() - tp).toFixed(1);
+      onStage?.('tokenized');
       claimPayload = { ...c.projection };
       fraudPayload = { ...f.projection };
     } else {
@@ -40,6 +41,7 @@ export function createPipeline({ config, clients, logger }) {
     const tf = performance.now();
     const fraud = await clients.fraud.analyze(fraudPayload, requestId);
     timings.fraud_ms = +(performance.now() - tf).toFixed(1);
+    onStage?.('analyzed', { cross_facility: (fraud.features?.n_faskes_30d ?? 1) > 1, flagged: fraud.flags.length > 0, case_id: fraud.case_id });
 
     if (fraud.case_id) {
       try {

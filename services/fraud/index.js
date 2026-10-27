@@ -62,8 +62,9 @@ app.get('/v1/thresholds', auth, (req, res) => res.json(engine.getThresholds()));
 app.put('/v1/thresholds', auth, asyncHandler(async (req, res) => res.json(await engine.setThresholds(thresholdSchema.parse(req.body)))));
 app.get('/v1/scores', auth, asyncHandler(async (req, res) => {
   const rows = await observations.find({}, { orderBy: 'created_ms', dir: 'desc', limit: Math.min(Number(req.query.limit) || 20000, 50000) });
-  res.json({ items: rows.filter((o) => o.result).map((o) => ({ claim_id: o.claim_id, fraud_ref: o.fraud_ref, facility_id: o.facility_id, claim_type: o.claim_type, score: o.result.risk_score, risk_level: o.result.risk_level, case_id: o.result.case_id })) });
+  res.json({ items: rows.filter((o) => o.result).map((o) => ({ claim_id: o.claim_id, fraud_ref: o.fraud_ref, facility_id: o.facility_id, claim_type: o.claim_type, diagnosis_code: o.diagnosis_code, amount: o.amount, admit_date: o.admit_date, score: o.result.risk_score, risk_level: o.result.risk_level, case_id: o.result.case_id })) });
 }));
+app.get('/v1/events', auth, asyncHandler(async (req, res) => res.json({ items: await events.find({}, { orderBy: 'at_ms', dir: 'desc', limit: Math.min(Number(req.query.limit) || 20, 100) }) })));
 app.get('/v1/stats', auth, asyncHandler(async (req, res) => res.json(await engine.stats())));
 
 app.use(notFound);

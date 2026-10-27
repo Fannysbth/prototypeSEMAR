@@ -1,6 +1,6 @@
 # Laporan Evaluasi SAMAR
 
-Dibuat 2026-10-27T12:07:32.600Z · Node v24.12.0 · win32 x64 · 16 CPU. Seluruh angka di berkas ini berasal dari `reports/metrics.json` (keluaran `npm run evaluate`).
+Dibuat 2026-10-27T13:50:28.293Z · Node v24.12.0 · win32 x64 · 16 CPU. Seluruh angka di berkas ini berasal dari `reports/metrics.json` (keluaran `npm run evaluate`).
 
 ## Batas yang harus dibaca lebih dulu
 - Seluruh data sintetis. Label berasal dari generator, bukan hasil audit BPJS. Angka membuktikan mekanisme, bukan akurasi pada data JKN riil.
@@ -19,7 +19,7 @@ Dibuat 2026-10-27T12:07:32.600Z · Node v24.12.0 · win32 x64 · 16 CPU. Seluruh
 - Selang kepercayaan 95%: bootstrap 200 resampling per pasien. Angka ringkasan = rerata (min - maks) antar 6 run.
 
 ## 2. Hasil deteksi, set standar
-| Varian | precision@1% | recall@1% | lift@1% | rupiah recall@1% | PR-AUC | ROC-AUC |
+| Varian | precision@1% | recall@1% | lift@1% | recall nilai dipertanyakan@1% | PR-AUC | ROC-AUC |
 |---|---|---|---|---|---|---|
 | SAMAR lengkap | 87.0% (60.0% - 100.0%) | 69.4% (37.5% - 100.0%) | 67.5x (37.5x - 98.0x) | 75.7% (45.4% - 100.0%) | 1.000 (1.000 - 1.000) | 1.000 (1.000 - 1.000) |
 | Tanpa ML (aturan saja) | 87.0% (60.0% - 100.0%) | 69.4% (37.5% - 100.0%) | 67.5x (37.5x - 98.0x) | 75.7% (45.6% - 100.0%) | 1.000 (1.000 - 1.000) | 1.000 (1.000 - 1.000) |
@@ -29,26 +29,26 @@ Dibuat 2026-10-27T12:07:32.600Z · Node v24.12.0 · win32 x64 · 16 CPU. Seluruh
 Set standar memakai pola fraud yang mirip dengan yang dikenal detektor. PR-AUC rata-rata >= 0,95: ini dibaca sebagai bukti mekanisme (pola fraud di generator dan detektor sejalan), bukan akurasi pada data nyata. Lihat set hard.
 
 ## 3. Hasil deteksi, set hard (skenario lebih sulit)
-| Varian | precision@1% | recall@1% | lift@1% | rupiah recall@1% | PR-AUC | ROC-AUC |
+| Varian | precision@1% | recall@1% | lift@1% | recall nilai dipertanyakan@1% | PR-AUC | ROC-AUC |
 |---|---|---|---|---|---|---|
-| SAMAR lengkap | 83.8% (47.6% - 100.0%) | 57.4% (33.3% - 85.0%) | 55.9x (32.7x - 82.3x) | 54.8% (23.8% - 85.1%) | 0.786 (0.629 - 0.901) | 0.914 (0.858 - 0.974) |
-| Tanpa ML (aturan saja) | 70.9% (38.1% - 95.2%) | 46.7% (29.3% - 75.0%) | 45.4x (28.1x - 72.6x) | 45.6% (26.4% - 73.5%) | 0.553 (0.401 - 0.705) | 0.787 (0.704 - 0.874) |
+| SAMAR lengkap | 86.2% (57.1% - 100.0%) | 61.0% (33.3% - 100.0%) | 59.4x (32.7x - 97.0x) | 58.3% (23.8% - 100.0%) | 0.922 (0.841 - 0.977) | 0.996 (0.990 - 1.000) |
+| Tanpa ML (aturan saja) | 82.9% (47.6% - 100.0%) | 56.1% (33.3% - 83.3%) | 54.6x (32.7x - 80.8x) | 67.3% (51.7% - 79.7%) | 0.719 (0.675 - 0.788) | 0.868 (0.840 - 0.916) |
 | Tanpa aturan (ML saja) | 82.2% (47.6% - 100.0%) | 56.9% (30.2% - 85.0%) | 55.4x (29.6x - 82.3x) | 51.9% (19.1% - 85.1%) | 0.733 (0.473 - 0.838) | 0.906 (0.857 - 0.948) |
-| Tanpa fitur lintas faskes | 75.6% (38.1% - 100.0%) | 48.5% (33.3% - 66.7%) | 47.3x (32.7x - 64.7x) | 45.2% (24.0% - 68.7%) | 0.561 (0.463 - 0.665) | 0.773 (0.715 - 0.832) |
+| Tanpa fitur lintas faskes | 81.4% (47.6% - 100.0%) | 55.2% (33.3% - 83.3%) | 53.9x (32.7x - 81.6x) | 51.0% (24.0% - 83.6%) | 0.699 (0.587 - 0.873) | 0.855 (0.798 - 0.954) |
 
 Set hard: upcoding hanya 1,15-1,5x, cloning tersebar 12 hari, unbundling dan self-referral dekat batas jendela, klaim ulang di luar jendela 30 hari, perawatan sedikit di atas batas wajar, satu modus tanpa detektor aturan (PROCEDURE_MISMATCH), serta hard negatives tambahan.
 
 ## 4. Ablasi
 Selisih terhadap SAMAR lengkap (rerata antar run), set hard:
-| Varian | PR-AUC | selisih | rupiah recall@1% | selisih |
+| Varian | PR-AUC | selisih | recall nilai dipertanyakan@1% | selisih |
 |---|---|---|---|---|
-| SAMAR lengkap | 0.786 (0.629 - 0.901) | - | 54.8% (23.8% - 85.1%) | - |
-| Tanpa ML (aturan saja) | 0.553 (0.401 - 0.705) | -0.234 | 45.6% (26.4% - 73.5%) | -9.1% |
-| Tanpa aturan (ML saja) | 0.733 (0.473 - 0.838) | -0.053 | 51.9% (19.1% - 85.1%) | -2.8% |
-| Tanpa fitur lintas faskes | 0.561 (0.463 - 0.665) | -0.225 | 45.2% (24.0% - 68.7%) | -9.6% |
+| SAMAR lengkap | 0.922 (0.841 - 0.977) | - | 58.3% (23.8% - 100.0%) | - |
+| Tanpa ML (aturan saja) | 0.719 (0.675 - 0.788) | -0.204 | 67.3% (51.7% - 79.7%) | 9.0% |
+| Tanpa aturan (ML saja) | 0.733 (0.473 - 0.838) | -0.190 | 51.9% (19.1% - 85.1%) | -6.3% |
+| Tanpa fitur lintas faskes | 0.699 (0.587 - 0.873) | -0.224 | 51.0% (24.0% - 83.6%) | -7.3% |
 
 Set standar:
-| Varian | PR-AUC | selisih | rupiah recall@1% | selisih |
+| Varian | PR-AUC | selisih | recall nilai dipertanyakan@1% | selisih |
 |---|---|---|---|---|
 | SAMAR lengkap | 1.000 (1.000 - 1.000) | - | 75.7% (45.4% - 100.0%) | - |
 | Tanpa ML (aturan saja) | 1.000 (1.000 - 1.000) | 0.000 | 75.7% (45.6% - 100.0%) | -0.0% |
@@ -77,7 +77,7 @@ Set hard:
 | CLONING | 21 | 100.0% [84.5% - 100.0%] | 100.0% [84.5% - 100.0%] | 100.0% [84.5% - 100.0%] | 100.0% [84.5% - 100.0%] |
 | UPCODING | 24 | 91.7% [74.2% - 97.7%] | 37.5% [21.2% - 57.3%] | 91.7% [74.2% - 97.7%] | 91.7% [74.2% - 97.7%] |
 | UNBUNDLING | 30 | 100.0% [88.6% - 100.0%] | 0.0% [0.0% - 11.3%] | 100.0% [88.6% - 100.0%] | 100.0% [88.6% - 100.0%] |
-| REPEAT_BILLING (hold-out) | 37 | 0.0% [0.0% - 9.4%] | 0.0% [0.0% - 9.4%] | 0.0% [0.0% - 9.4%] | 0.0% [0.0% - 9.4%] |
+| REPEAT_BILLING (hold-out) | 37 | 100.0% [90.6% - 100.0%] | 100.0% [90.6% - 100.0%] | 0.0% [0.0% - 9.4%] | 100.0% [90.6% - 100.0%] |
 | PROLONGED_LOS | 19 | 100.0% [83.2% - 100.0%] | 100.0% [83.2% - 100.0%] | 84.2% [62.4% - 94.5%] | 100.0% [83.2% - 100.0%] |
 | PROCEDURE_MISMATCH | 26 | 100.0% [87.1% - 100.0%] | 0.0% [0.0% - 12.9%] | 100.0% [87.1% - 100.0%] | 100.0% [87.1% - 100.0%] |
 
@@ -86,18 +86,18 @@ Catatan baca: recall per modus di set hard tinggi sebagian besar karena model su
 ### Modus hold-out REPEAT_BILLING
 | Varian | Set standar | Set hard |
 |---|---|---|
-| SAMAR lengkap | 100.0% [87.5% - 100.0%] dari 27 klaim | 0.0% [0.0% - 9.4%] dari 37 klaim |
+| SAMAR lengkap | 100.0% [87.5% - 100.0%] dari 27 klaim | 100.0% [90.6% - 100.0%] dari 37 klaim |
 | Tanpa aturan (ML saja) | 0.0% [0.0% - 12.5%] dari 27 klaim | 0.0% [0.0% - 9.4%] dari 37 klaim |
-| Tanpa fitur lintas faskes | 100.0% [87.5% - 100.0%] dari 27 klaim | 0.0% [0.0% - 9.4%] dari 37 klaim |
-| Tanpa ML (aturan saja) | 100.0% [87.5% - 100.0%] dari 27 klaim | 0.0% [0.0% - 9.4%] dari 37 klaim |
+| Tanpa fitur lintas faskes | 100.0% [87.5% - 100.0%] dari 27 klaim | 100.0% [90.6% - 100.0%] dari 37 klaim |
+| Tanpa ML (aturan saja) | 100.0% [87.5% - 100.0%] dari 27 klaim | 100.0% [90.6% - 100.0%] dari 37 klaim |
 
-Catatan baca: pada set hard klaim ulang ditagih 38 hari setelah klaim pertama, di luar jendela 30 hari detektor dan di luar jendela fitur lintas faskes (30 hari), jadi tidak ada fitur yang bisa melihatnya. Recall 0% di sana adalah celah cakupan yang memang dibuat, bukan bukti model gagal menggeneralisasi; perbaikannya memperlebar jendela dan mengukur ulang.
+Catatan baca (perbaikan T4): sebelum perbaikan jendela REPEAT_BILLING 30 hari; recall hold-out di set hard 0% (0 dari 37) pada semua varian karena klaim ulang di set hard ditagih 38 hari setelah klaim pertama, di luar jendela. Setelah jendela dilebarkan menjadi 90 hari angka itu naik, tetapi kenaikan ini by construction: jarak 38 hari dibuat generator dan kini berada di dalam jendela. Itu bukan bukti generalisasi. Ukuran generalisasi yang lebih jujur adalah varian "Tanpa aturan (ML saja)", yang tetap 0% karena model supervised tidak pernah melihat modus ini dan tidak ada aturan yang menangkapnya. Klaim ulang dengan jarak lebih dari 90 hari tetap lolos.
 
 "Tanpa aturan (ML saja)" adalah ukuran generalisasi sebenarnya ke modus yang tidak dilihat model; pada varian lengkap, detektor aturan klaim berulang tetap menangkapnya karena aturan itu memang ada.
 
 ## 6. Hasil per run (SAMAR lengkap)
 Set standar:
-| Seed | Fraud rate | Klaim uji | Fraud uji | precision@1% [CI95] | recall@1% [CI95] | rupiah recall@1% [CI95] | PR-AUC [CI95] |
+| Seed | Fraud rate | Klaim uji | Fraud uji | precision@1% [CI95] | recall@1% [CI95] | recall nilai dipertanyakan@1% [CI95] | PR-AUC [CI95] |
 |---|---|---|---|---|---|---|---|
 | 42 | 1% | 2028 | 13 | 61.9% [33.3% - 100.0%] | 100.0% [100.0% - 100.0%] | 100.0% [100.0% - 100.0%] | 100.0% [100.0% - 100.0%] |
 | 43 | 1% | 1960 | 12 | 60.0% [25.0% - 100.0%] | 100.0% [95.2% - 100.0%] | 100.0% [98.8% - 100.0%] | 100.0% [100.0% - 100.0%] |
@@ -107,14 +107,14 @@ Set standar:
 | 44 | 3% | 1968 | 49 | 100.0% [100.0% - 100.0%] | 40.8% [30.3% - 57.1%] | 55.1% [37.9% - 72.9%] | 100.0% [100.0% - 100.0%] |
 
 Set hard:
-| Seed | Fraud rate | Klaim uji | Fraud uji | precision@1% [CI95] | recall@1% [CI95] | rupiah recall@1% [CI95] | PR-AUC [CI95] |
+| Seed | Fraud rate | Klaim uji | Fraud uji | precision@1% [CI95] | recall@1% [CI95] | recall nilai dipertanyakan@1% [CI95] | PR-AUC [CI95] |
 |---|---|---|---|---|---|---|---|
-| 42 | 1% | 2037 | 12 | 47.6% [23.8% - 76.2%] | 83.3% [57.1% - 100.0%] | 85.1% [57.6% - 100.0%] | 76.3% [46.4% - 100.0%] |
-| 43 | 1% | 1995 | 22 | 75.0% [45.0% - 85.0%] | 68.2% [44.4% - 92.3%] | 58.5% [29.4% - 89.9%] | 62.9% [41.4% - 83.5%] |
-| 44 | 1% | 1936 | 20 | 85.0% [55.0% - 100.0%] | 85.0% [59.4% - 100.0%] | 81.5% [53.2% - 100.0%] | 90.1% [77.1% - 99.7%] |
-| 42 | 3% | 2120 | 55 | 100.0% [100.0% - 100.0%] | 40.0% [30.6% - 55.0%] | 42.1% [28.8% - 56.3%] | 79.2% [69.6% - 88.7%] |
-| 43 | 3% | 2062 | 63 | 100.0% [95.2% - 100.0%] | 33.3% [26.6% - 44.7%] | 23.8% [16.6% - 37.8%] | 82.9% [72.6% - 91.0%] |
-| 44 | 3% | 2014 | 58 | 95.2% [85.7% - 100.0%] | 34.5% [27.3% - 47.7%] | 37.6% [23.4% - 53.5%] | 80.5% [69.3% - 90.4%] |
+| 42 | 1% | 2037 | 12 | 57.1% [33.3% - 85.7%] | 100.0% [100.0% - 100.0%] | 100.0% [100.0% - 100.0%] | 90.1% [71.0% - 100.0%] |
+| 43 | 1% | 1995 | 22 | 75.0% [50.0% - 90.0%] | 68.2% [45.7% - 100.0%] | 58.5% [29.4% - 100.0%] | 84.1% [71.2% - 95.5%] |
+| 44 | 1% | 1936 | 20 | 90.0% [55.0% - 100.0%] | 90.0% [59.4% - 100.0%] | 87.6% [53.2% - 100.0%] | 94.5% [85.7% - 100.0%] |
+| 42 | 3% | 2120 | 55 | 100.0% [100.0% - 100.0%] | 40.0% [30.6% - 55.0%] | 42.1% [28.8% - 56.3%] | 97.7% [95.1% - 99.4%] |
+| 43 | 3% | 2062 | 63 | 100.0% [95.2% - 100.0%] | 33.3% [26.6% - 44.7%] | 23.8% [16.6% - 37.8%] | 93.2% [86.1% - 98.0%] |
+| 44 | 3% | 2014 | 58 | 95.2% [85.7% - 100.0%] | 34.5% [27.3% - 47.7%] | 37.6% [23.4% - 53.5%] | 93.9% [87.3% - 99.0%] |
 
 ## 7. Paritas deteksi baseline vs SAMAR dan paparan data pribadi
 Data: 387 klaim sintetis (70 berlabel fraud), mode baseline (tanpa tokenisasi) dan proposed (dengan tokenisasi) pada layanan nyata, layanan ml aktif.
@@ -132,11 +132,11 @@ Total payload mengandung PII di zona token: **100% (baseline) menjadi 0% (SAMAR)
 ## 8. Kinerja
 | Mode | Rata-rata | p50 | p95 | p99 | Throughput | Error |
 |---|---|---|---|---|---|---|
-| baseline | 14.6 ms | 14.2 ms | 17.3 ms | 18.5 ms | 100.7 TPS | 0 |
-| proposed | 15.5 ms | 14.8 ms | 19.2 ms | 21 ms | 104.1 TPS | 0 |
+| baseline | 26.5 ms | 26 ms | 33.7 ms | 35.7 ms | 38.5 TPS | 0 |
+| proposed | 28.5 ms | 28.2 ms | 34.6 ms | 35.9 ms | 50.7 TPS | 0 |
 
-- Latensi POST /verify (SAMAR, 120 permintaan berurutan): p50 17.2 ms, **p95 22.1 ms**, maks 30.7 ms.
-- Throughput unggah CSV: 1000 baris dalam 6.53 detik = **153.3 baris/detik**.
+- Latensi POST /verify (SAMAR, 120 permintaan berurutan): p50 24.2 ms, **p95 31.6 ms**, maks 50.9 ms.
+- Throughput unggah CSV: 1000 baris dalam 3.12 detik = **321 baris/detik**.
 - Satu mesin, penyimpanan memori, layanan ml aktif. Latensi absolut dengan Postgres lewat jaringan lebih tinggi.
 
 ## 9. Keamanan: 23/23 percobaan tidak sah ditolak
@@ -199,4 +199,4 @@ Set hard:
 - Lemah pada UNBUNDLING (recall@k di bawah 0,30).
 
 ## 12. Simulasi dampak
-Masukan skenario rupiah recall: rendah 23.8%, sedang 54.8%, tinggi 85.1% (rupiah recall @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run). Fraud rate, recovery rate, dan nilai klaim cabang adalah asumsi; hasil ada di halaman Evaluasi dan `GET /impact/scenarios`.
+Masukan skenario recall nilai dipertanyakan: rendah 23.8%, sedang 58.3%, tinggi 100.0% (recall nilai dipertanyakan @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run). Fraud rate, recovery rate, dan nilai klaim cabang adalah asumsi; hasil ada di halaman Evaluasi dan `GET /impact/scenarios`.

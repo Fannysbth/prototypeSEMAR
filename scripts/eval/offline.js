@@ -92,7 +92,7 @@ export function aggregate(runs) {
     // rendah/sedang/tinggi untuk simulasi dampak diambil dari set hard (lebih konservatif) varian lengkap.
   }
   const rr = runs.filter((r) => r.difficulty === 'hard').map((r) => r.variants.full.capacity_1pct.rupiah_recall).filter((x) => x !== null);
-  const impact_inputs = { rupiah_recall: { low: round(Math.min(...rr)), mid: round(mean(rr)), high: round(Math.max(...rr)) }, source: 'rupiah recall @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run' };
+  const impact_inputs = { rupiah_recall: { low: round(Math.min(...rr)), mid: round(mean(rr)), high: round(Math.max(...rr)) }, source: 'recall nilai dipertanyakan @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run' };
   return { summary, holdout, impact_inputs };
 }
 
@@ -107,7 +107,7 @@ export async function runGrid({ peserta = 4000, log = () => {} } = {}) {
         runs.push(r.summary);
         if (seed === SEEDS[0] && fraudRate === 0.03) primary[difficulty] = r;
         const m = r.summary.variants.full;
-        log(`  ${difficulty} seed ${seed} fraud ${fraudRate * 100}%: ${m.n_test} klaim uji, ${m.n_fraud} fraud, PR-AUC ${m.pr_auc}, rupiah recall@1% ${m.capacity_1pct.rupiah_recall} (${((Date.now() - t0) / 1000).toFixed(0)} dtk)`);
+        log(`  ${difficulty} seed ${seed} fraud ${fraudRate * 100}%: ${m.n_test} klaim uji, ${m.n_fraud} fraud, PR-AUC ${m.pr_auc}, recall nilai dipertanyakan@1% ${m.capacity_1pct.rupiah_recall} (${((Date.now() - t0) / 1000).toFixed(0)} dtk)`);
       }
     }
   }

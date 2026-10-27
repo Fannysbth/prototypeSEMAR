@@ -55,7 +55,8 @@ const MATRIX = {
   'GET /cases': ['ver', 'aud'], 'GET /cases/x': ['ver', 'aud'], 'PATCH /cases/x': ['ver', 'aud'], 'POST /cases/x/explain': ['ver', 'aud'], 'POST /cases/x/reveal': ['aud'],
   'POST /tokens/revoke': ['adm'], 'POST /keys/rotate': ['adm'], 'GET /settings/threshold': ['ver', 'aud', 'adm'], 'PUT /settings/threshold': ['adm'],
   'GET /dashboard/summary': ['ver', 'aud', 'adm'], 'POST /impact/simulate': ['aud', 'adm'], 'GET /impact/scenarios': ['aud', 'adm'], 'GET /evaluation/latest': ['aud', 'adm'],
-  'GET /evaluation/evidence': ['aud', 'adm'], 'GET /reports/cases.csv': ['aud'], 'GET /export/evalkit': ['adm'], 'GET /audit': ['adm'], 'GET /audit/verify': ['adm'],
+  'GET /evaluation/evidence': ['aud', 'adm'], 'POST /cases/x/request-file': ['ver'], 'POST /cases/x/escalate': ['ver'], 'GET /file-requests': ['a', 'b', 'ver', 'aud'],
+  'POST /file-requests/x/reply': ['a', 'b'], 'GET /file-requests/x/attachment': ['aud'], 'GET /home': ['a', 'b', 'ver', 'aud', 'adm'], 'GET /claims/tokenized': ['ver', 'aud', 'adm'], 'GET /reports/cases.csv': ['aud'], 'GET /export/evalkit': ['adm'], 'GET /audit': ['adm'], 'GET /audit/verify': ['adm'],
 };
 const openapiOps = () => {
   const ops = []; let cur = '';

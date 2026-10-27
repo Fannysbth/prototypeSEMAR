@@ -98,8 +98,8 @@ const LIMITATIONS = [
 
   const f = offline.summary.hard.full; const s = offline.summary.standard.full;
   log('\n================ RINGKASAN ================');
-  log(`Standar: PR-AUC ${s.pr_auc.mean}, rupiah recall@1% ${s.rupiah_recall_at_1pct.mean}, precision@1% ${s.precision_at_1pct.mean}`);
-  log(`Hard   : PR-AUC ${f.pr_auc.mean}, rupiah recall@1% ${f.rupiah_recall_at_1pct.mean}, precision@1% ${f.precision_at_1pct.mean}`);
+  log(`Standar: PR-AUC ${s.pr_auc.mean}, recall nilai dipertanyakan@1% ${s.rupiah_recall_at_1pct.mean}, precision@1% ${s.precision_at_1pct.mean}`);
+  log(`Hard   : PR-AUC ${f.pr_auc.mean}, recall nilai dipertanyakan@1% ${f.rupiah_recall_at_1pct.mean}, precision@1% ${f.precision_at_1pct.mean}`);
   const h = offline.holdout; const hv = (d, v) => (h[d][v] ? `${h[d][v].recall} (n=${h[d][v].n})` : '-');
   log(`Hold-out ${HOLDOUT_MODUS}: lengkap std ${hv('standard', 'full')}, hard ${hv('hard', 'full')}; ML saja std ${hv('standard', 'no_rules')}, hard ${hv('hard', 'no_rules')}`);
   log(`Paritas ${stack.parity.pct.toFixed(1)}% · PII ${baseline.privacy.pct_with_pii.toFixed(0)}% -> ${proposed.privacy.pct_with_pii.toFixed(0)}% · keamanan ${stack.security.rejected}/${stack.security.total} · fungsional ${stack.functional.passed}/${stack.functional.total}`);

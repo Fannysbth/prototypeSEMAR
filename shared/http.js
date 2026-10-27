@@ -14,7 +14,8 @@ export class HttpError extends Error {
 
 export const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
-export function createBaseApp({ service, config }) {
+// bigJson: [{ test: RegExp, limit: '300kb' }] menaikkan batas body JSON HANYA untuk rute tertentu (mis. balasan faskes dengan lampiran kecil).
+export function createBaseApp({ service, config, bigJson = [] }) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', config.trustProxy);
@@ -23,7 +24,9 @@ export function createBaseApp({ service, config }) {
     res.setHeader('x-request-id', req.id);
     next();
   });
-  app.use(express.json({ limit: '64kb' }));
+  const defaultParser = express.json({ limit: '64kb' });
+  const bigParsers = bigJson.map((b) => ({ test: b.test, parser: express.json({ limit: b.limit }) }));
+  app.use((req, res, next) => (bigParsers.find((b) => b.test.test(req.path))?.parser ?? defaultParser)(req, res, next));
   app.get('/health', (req, res) => res.json({ ok: true, service, uptime_s: Math.round(process.uptime()) }));
   return app;
 }

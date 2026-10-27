@@ -41,7 +41,7 @@ export const revokeSchema = z.object({
   subject_token: z.string().regex(/^PSE_[A-Z]{3}_[0-9A-F]{20}$/).optional(), patient_nik: z.string().regex(/^\d{16}$/).optional(), reason: z.string().trim().max(500).optional(),
 }).strict().refine((v) => v.subject_token || v.patient_nik, { message: 'subject_token atau patient_nik wajib' });
 export const statusSchema = z.object({
-  status: z.enum(['BARU', 'DITINJAU', 'BUTUH_INFO', 'TERKONFIRMASI', 'DITOLAK_FALSE_POSITIVE', 'SELESAI']), note: z.string().trim().max(500).optional(),
+  status: z.enum(['BARU', 'DITINJAU', 'BUTUH_INFO', 'MENUNGGU_FASKES', 'ESKALASI', 'TERKONFIRMASI', 'DITOLAK_FALSE_POSITIVE', 'SELESAI']), note: z.string().trim().max(500).optional(),
 }).strict();
 export const caseQuerySchema = z.object({
   risk: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(), modus: z.string().regex(/^[A-Z_]+$/).optional(), status: z.string().regex(/^[A-Z_]+$/).optional(),

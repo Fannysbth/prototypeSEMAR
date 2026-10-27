@@ -33,6 +33,7 @@ export function createClients(config) {
       setStatus: (id, body) => call('fraud', `/v1/cases/${encodeURIComponent(id)}`, { method: 'PATCH', body }),
       setExplanation: (id, body) => call('fraud', `/v1/cases/${encodeURIComponent(id)}/explanation`, { method: 'POST', body }),
       scores: () => call('fraud', '/v1/scores?limit=50000'),
+      events: (limit = 20) => call('fraud', `/v1/events?limit=${limit}`),
       thresholds: () => call('fraud', '/v1/thresholds'),
       setThresholds: (body) => call('fraud', '/v1/thresholds', { method: 'PUT', body }),
       stats: () => call('fraud', '/v1/stats'),

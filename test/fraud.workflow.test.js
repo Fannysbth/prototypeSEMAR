@@ -54,7 +54,7 @@ test('alur kasus: BARU -> status baru, tiap perubahan masuk case_events; status 
   const c = await e.getCase(r.case_id);
   assert.deepEqual(c.events.map((x) => [x.from_status, x.to_status]), [[null, 'BARU'], ['BARU', 'DITINJAU'], ['DITINJAU', 'TERKONFIRMASI']]);
   await assert.rejects(() => e.setStatus(r.case_id, { status: 'ACAK', actor: 'v1' }), (err) => err.status === 400);
-  assert.equal(CASE_STATUSES.length, 6);
+  assert.deepEqual(CASE_STATUSES, ["BARU", "DITINJAU", "BUTUH_INFO", "MENUNGGU_FASKES", "ESKALASI", "TERKONFIRMASI", "DITOLAK_FALSE_POSITIVE", "SELESAI"]);
   assert.equal((await e.listCases({ status: 'TERKONFIRMASI' })).length, 1);
   assert.equal((await e.listCases({ risk: 'HIGH', modus: 'UPCODING', faskes: 'RS-A' })).length, 1);
   assert.equal((await e.listCases({ modus: 'CLONING' })).length, 0);

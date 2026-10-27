@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-27T12:07:32.600Z",
+  "generated_at": "2026-10-27T13:50:28.293Z",
   "node": "v24.12.0",
   "platform": "win32 x64 · 16 CPU",
   "protocol": {
@@ -2056,43 +2056,43 @@
             "fraud_rate": 0.00589,
             "capacity_1pct": {
               "k": 21,
-              "precision": 0.4762,
-              "recall": 0.8333,
-              "lift": 80.83,
-              "rupiah_recall": 0.851
+              "precision": 0.5714,
+              "recall": 1,
+              "lift": 97,
+              "rupiah_recall": 1
             },
             "capacity_3pct": {
               "k": 62,
-              "precision": 0.1613,
-              "recall": 0.8333,
-              "lift": 27.38,
-              "rupiah_recall": 0.851
+              "precision": 0.1935,
+              "recall": 1,
+              "lift": 32.85,
+              "rupiah_recall": 1
             },
-            "pr_auc": 0.7625,
-            "roc_auc": 0.9143,
+            "pr_auc": 0.9008,
+            "roc_auc": 0.9995,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.23809523809523808,
-                "hi": 0.7619047619047619
+                "lo": 0.3333333333333333,
+                "hi": 0.8571428571428571
               },
               "recall_1pct": {
-                "lo": 0.5714285714285714,
+                "lo": 1,
                 "hi": 1
               },
               "rupiah_recall_1pct": {
-                "lo": 0.5755900262127284,
+                "lo": 1,
                 "hi": 1
               },
               "pr_auc": {
-                "lo": 0.4635639312025526,
+                "lo": 0.7096043411088659,
                 "hi": 1
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 15,
-              "precision": 0.6667,
-              "recall": 0.8333
+              "cases": 17,
+              "precision": 0.7059,
+              "recall": 1
             },
             "per_modus": {
               "UPCODING": {
@@ -2107,8 +2107,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 2,
-                "hit": 0,
-                "recall": 0
+                "hit": 2,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 2,
@@ -2138,43 +2138,43 @@
             "fraud_rate": 0.00589,
             "capacity_1pct": {
               "k": 21,
-              "precision": 0.381,
-              "recall": 0.6667,
-              "lift": 64.67,
-              "rupiah_recall": 0.6462
+              "precision": 0.4762,
+              "recall": 0.8333,
+              "lift": 80.83,
+              "rupiah_recall": 0.7952
             },
             "capacity_3pct": {
               "k": 62,
-              "precision": 0.129,
-              "recall": 0.6667,
-              "lift": 21.9,
-              "rupiah_recall": 0.6462
+              "precision": 0.1613,
+              "recall": 0.8333,
+              "lift": 27.38,
+              "rupiah_recall": 0.7952
             },
-            "pr_auc": 0.6157,
-            "roc_auc": 0.8324,
+            "pr_auc": 0.7878,
+            "roc_auc": 0.9159,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.19047619047619047,
-                "hi": 0.6190476190476191
+                "lo": 0.23809523809523808,
+                "hi": 0.7142857142857143
               },
               "recall_1pct": {
-                "lo": 0.38461538461538464,
-                "hi": 0.9090909090909091
+                "lo": 0.6,
+                "hi": 1
               },
               "rupiah_recall_1pct": {
-                "lo": 0.33719753942049824,
-                "hi": 0.9616383447968373
+                "lo": 0.5175073688377804,
+                "hi": 1
               },
               "pr_auc": {
-                "lo": 0.2946625723446395,
-                "hi": 0.820284817484306
+                "lo": 0.4878224033526723,
+                "hi": 0.9571428571428572
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 11,
-              "precision": 0.6364,
-              "recall": 0.5833
+              "cases": 13,
+              "precision": 0.6923,
+              "recall": 0.75
             },
             "per_modus": {
               "UPCODING": {
@@ -2189,8 +2189,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 2,
-                "hit": 0,
-                "recall": 0
+                "hit": 2,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 2,
@@ -2302,43 +2302,43 @@
             "fraud_rate": 0.00589,
             "capacity_1pct": {
               "k": 21,
-              "precision": 0.381,
-              "recall": 0.6667,
-              "lift": 64.67,
-              "rupiah_recall": 0.6867
+              "precision": 0.4762,
+              "recall": 0.8333,
+              "lift": 80.83,
+              "rupiah_recall": 0.8357
             },
             "capacity_3pct": {
               "k": 62,
-              "precision": 0.129,
-              "recall": 0.6667,
-              "lift": 21.9,
-              "rupiah_recall": 0.6867
+              "precision": 0.1613,
+              "recall": 0.8333,
+              "lift": 27.38,
+              "rupiah_recall": 0.8357
             },
-            "pr_auc": 0.6655,
-            "roc_auc": 0.8321,
+            "pr_auc": 0.8133,
+            "roc_auc": 0.916,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.14285714285714285,
-                "hi": 0.6190476190476191
+                "lo": 0.23809523809523808,
+                "hi": 0.7619047619047619
               },
               "recall_1pct": {
-                "lo": 0.35714285714285715,
-                "hi": 0.9166666666666666
+                "lo": 0.5714285714285714,
+                "hi": 1
               },
               "rupiah_recall_1pct": {
-                "lo": 0.3086895910173546,
-                "hi": 0.9372602065648203
+                "lo": 0.5466170820245809,
+                "hi": 1
               },
               "pr_auc": {
-                "lo": 0.3486870758987009,
-                "hi": 0.9028034948698548
+                "lo": 0.5234117513815918,
+                "hi": 1
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 12,
-              "precision": 0.6667,
-              "recall": 0.6667
+              "cases": 14,
+              "precision": 0.7143,
+              "recall": 0.8333
             },
             "per_modus": {
               "UPCODING": {
@@ -2353,8 +2353,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 2,
-                "hit": 0,
-                "recall": 0
+                "hit": 2,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 2,
@@ -2412,42 +2412,42 @@
             },
             "capacity_3pct": {
               "k": 60,
-              "precision": 0.2667,
-              "recall": 0.7273,
-              "lift": 24.18,
-              "rupiah_recall": 0.6153
+              "precision": 0.3667,
+              "recall": 1,
+              "lift": 33.25,
+              "rupiah_recall": 1
             },
-            "pr_auc": 0.629,
-            "roc_auc": 0.8578,
+            "pr_auc": 0.8406,
+            "roc_auc": 0.9984,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.45,
-                "hi": 0.85
+                "lo": 0.5,
+                "hi": 0.9
               },
               "recall_1pct": {
-                "lo": 0.4444444444444444,
-                "hi": 0.9230769230769231
+                "lo": 0.45714285714285713,
+                "hi": 1
               },
               "rupiah_recall_1pct": {
                 "lo": 0.294348835652699,
-                "hi": 0.8985871985448616
+                "hi": 1
               },
               "pr_auc": {
-                "lo": 0.413614778595108,
-                "hi": 0.835256671238973
+                "lo": 0.712176052420437,
+                "hi": 0.9553174397511626
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 23,
-              "precision": 0.6957,
-              "recall": 0.7273
+              "cases": 29,
+              "precision": 0.7586,
+              "recall": 1
             },
             "per_modus": {
               "REPEAT_BILLING": {
                 "n": 6,
-                "hit": 0,
-                "recall": 0
+                "hit": 6,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 2,
@@ -2482,49 +2482,49 @@
             "fraud_rate": 0.01103,
             "capacity_1pct": {
               "k": 20,
-              "precision": 0.45,
-              "recall": 0.4091,
-              "lift": 40.81,
-              "rupiah_recall": 0.3325
+              "precision": 0.7,
+              "recall": 0.6364,
+              "lift": 63.48,
+              "rupiah_recall": 0.6764
             },
             "capacity_3pct": {
               "k": 60,
-              "precision": 0.15,
-              "recall": 0.4091,
-              "lift": 13.6,
-              "rupiah_recall": 0.3325
+              "precision": 0.25,
+              "recall": 0.6818,
+              "lift": 22.67,
+              "rupiah_recall": 0.7172
             },
-            "pr_auc": 0.4009,
-            "roc_auc": 0.7035,
+            "pr_auc": 0.6762,
+            "roc_auc": 0.8403,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.2,
-                "hi": 0.7
+                "lo": 0.4,
+                "hi": 1
               },
               "recall_1pct": {
-                "lo": 0.2,
-                "hi": 0.625
+                "lo": 0.5,
+                "hi": 0.8888888888888888
               },
               "rupiah_recall_1pct": {
-                "lo": 0.13290932544119488,
-                "hi": 0.6447683399388676
+                "lo": 0.42561927547426986,
+                "hi": 0.9351099257845363
               },
               "pr_auc": {
-                "lo": 0.20365499213541274,
-                "hi": 0.6036163341889589
+                "lo": 0.49022182676675563,
+                "hi": 0.8776520795912505
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 13,
-              "precision": 0.6154,
-              "recall": 0.3636
+              "cases": 19,
+              "precision": 0.7368,
+              "recall": 0.6364
             },
             "per_modus": {
               "REPEAT_BILLING": {
                 "n": 6,
-                "hit": 0,
-                "recall": 0
+                "hit": 6,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 2,
@@ -2636,49 +2636,49 @@
             "fraud_rate": 0.01103,
             "capacity_1pct": {
               "k": 20,
-              "precision": 0.7,
-              "recall": 0.6364,
-              "lift": 63.48,
-              "rupiah_recall": 0.494
+              "precision": 0.9,
+              "recall": 0.8182,
+              "lift": 81.61,
+              "rupiah_recall": 0.6303
             },
             "capacity_3pct": {
               "k": 60,
-              "precision": 0.2333,
-              "recall": 0.6364,
-              "lift": 21.16,
-              "rupiah_recall": 0.494
+              "precision": 0.3333,
+              "recall": 0.9091,
+              "lift": 30.23,
+              "rupiah_recall": 0.8787
             },
-            "pr_auc": 0.6335,
-            "roc_auc": 0.8156,
+            "pr_auc": 0.8734,
+            "roc_auc": 0.9536,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.35,
-                "hi": 0.95
+                "lo": 0.6,
+                "hi": 1
               },
               "recall_1pct": {
-                "lo": 0.4375,
-                "hi": 0.8235294117647058
+                "lo": 0.625,
+                "hi": 1
               },
               "rupiah_recall_1pct": {
-                "lo": 0.27862985798639683,
-                "hi": 0.7936639937955234
+                "lo": 0.4432371618089114,
+                "hi": 1
               },
               "pr_auc": {
-                "lo": 0.4432195578902405,
-                "hi": 0.8095648594197495
+                "lo": 0.7307141247592271,
+                "hi": 0.9817801404957179
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 18,
-              "precision": 0.7778,
-              "recall": 0.6364
+              "cases": 24,
+              "precision": 0.8333,
+              "recall": 0.9091
             },
             "per_modus": {
               "REPEAT_BILLING": {
                 "n": 6,
-                "hit": 0,
-                "recall": 0
+                "hit": 6,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 2,
@@ -2734,20 +2734,20 @@
             "fraud_rate": 0.01033,
             "capacity_1pct": {
               "k": 20,
-              "precision": 0.85,
-              "recall": 0.85,
-              "lift": 82.28,
-              "rupiah_recall": 0.8147
+              "precision": 0.9,
+              "recall": 0.9,
+              "lift": 87.12,
+              "rupiah_recall": 0.8765
             },
             "capacity_3pct": {
               "k": 59,
-              "precision": 0.322,
-              "recall": 0.95,
-              "lift": 31.17,
-              "rupiah_recall": 0.9381
+              "precision": 0.339,
+              "recall": 1,
+              "lift": 32.81,
+              "rupiah_recall": 1
             },
-            "pr_auc": 0.9006,
-            "roc_auc": 0.9739,
+            "pr_auc": 0.9455,
+            "roc_auc": 0.9995,
             "ci95": {
               "precision_1pct": {
                 "lo": 0.55,
@@ -2762,15 +2762,15 @@
                 "hi": 1
               },
               "pr_auc": {
-                "lo": 0.7706026640567246,
-                "hi": 0.9965217391304348
+                "lo": 0.8566077441077442,
+                "hi": 1
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 24,
-              "precision": 0.7917,
-              "recall": 0.95
+              "cases": 25,
+              "precision": 0.8,
+              "recall": 1
             },
             "per_modus": {
               "PROLONGED_LOS": {
@@ -2805,8 +2805,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 1,
-                "hit": 0,
-                "recall": 0
+                "hit": 1,
+                "recall": 1
               },
               "UNBUNDLING": {
                 "n": 1,
@@ -2821,43 +2821,43 @@
             "fraud_rate": 0.01033,
             "capacity_1pct": {
               "k": 20,
-              "precision": 0.75,
-              "recall": 0.75,
-              "lift": 72.6,
-              "rupiah_recall": 0.7352
+              "precision": 0.8,
+              "recall": 0.8,
+              "lift": 77.44,
+              "rupiah_recall": 0.7971
             },
             "capacity_3pct": {
               "k": 59,
-              "precision": 0.2542,
-              "recall": 0.75,
-              "lift": 24.61,
-              "rupiah_recall": 0.7352
+              "precision": 0.2712,
+              "recall": 0.8,
+              "lift": 26.25,
+              "rupiah_recall": 0.7971
             },
-            "pr_auc": 0.7046,
-            "roc_auc": 0.8744,
+            "pr_auc": 0.7574,
+            "roc_auc": 0.8994,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.3,
+                "lo": 0.4,
                 "hi": 1
               },
               "recall_1pct": {
-                "lo": 0.5,
-                "hi": 0.9333333333333333
+                "lo": 0.5357142857142857,
+                "hi": 0.95
               },
               "rupiah_recall_1pct": {
-                "lo": 0.46060817011522637,
-                "hi": 0.986116127281088
+                "lo": 0.5297776242649963,
+                "hi": 0.9938048166914569
               },
               "pr_auc": {
-                "lo": 0.47552163289986704,
-                "hi": 0.9239979584566302
+                "lo": 0.5499303158598496,
+                "hi": 0.9377093833365596
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 19,
-              "precision": 0.7895,
-              "recall": 0.75
+              "cases": 20,
+              "precision": 0.8,
+              "recall": 0.8
             },
             "per_modus": {
               "PROLONGED_LOS": {
@@ -2892,8 +2892,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 1,
-                "hit": 0,
-                "recall": 0
+                "hit": 1,
+                "recall": 1
               },
               "UNBUNDLING": {
                 "n": 1,
@@ -2995,43 +2995,43 @@
             "fraud_rate": 0.01033,
             "capacity_1pct": {
               "k": 20,
-              "precision": 0.55,
-              "recall": 0.55,
-              "lift": 53.24,
-              "rupiah_recall": 0.5874
+              "precision": 0.6,
+              "recall": 0.6,
+              "lift": 58.08,
+              "rupiah_recall": 0.6493
             },
             "capacity_3pct": {
               "k": 59,
-              "precision": 0.1864,
-              "recall": 0.55,
-              "lift": 18.05,
-              "rupiah_recall": 0.5874
+              "precision": 0.2034,
+              "recall": 0.6,
+              "lift": 19.69,
+              "rupiah_recall": 0.6493
             },
-            "pr_auc": 0.5411,
-            "roc_auc": 0.7725,
+            "pr_auc": 0.5871,
+            "roc_auc": 0.7978,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.25,
-                "hi": 0.9
+                "lo": 0.3,
+                "hi": 0.95
               },
               "recall_1pct": {
-                "lo": 0.2857142857142857,
-                "hi": 0.8235294117647058
+                "lo": 0.34615384615384615,
+                "hi": 0.8888888888888888
               },
               "rupiah_recall_1pct": {
-                "lo": 0.3451729853972711,
-                "hi": 0.8607670485136778
+                "lo": 0.38835886681105247,
+                "hi": 0.9334539951886172
               },
               "pr_auc": {
-                "lo": 0.28934421698735113,
-                "hi": 0.8143746023256321
+                "lo": 0.33344922965180795,
+                "hi": 0.8761683876363665
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 14,
-              "precision": 0.7857,
-              "recall": 0.55
+              "cases": 15,
+              "precision": 0.8,
+              "recall": 0.6
             },
             "per_modus": {
               "PROLONGED_LOS": {
@@ -3066,8 +3066,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 1,
-                "hit": 0,
-                "recall": 0
+                "hit": 1,
+                "recall": 1
               },
               "UNBUNDLING": {
                 "n": 1,
@@ -3110,13 +3110,13 @@
             },
             "capacity_3pct": {
               "k": 64,
-              "precision": 0.6875,
-              "recall": 0.8,
-              "lift": 26.5,
-              "rupiah_recall": 0.6467
+              "precision": 0.8438,
+              "recall": 0.9818,
+              "lift": 32.52,
+              "rupiah_recall": 0.9765
             },
-            "pr_auc": 0.7917,
-            "roc_auc": 0.8983,
+            "pr_auc": 0.9774,
+            "roc_auc": 0.9994,
             "ci95": {
               "precision_1pct": {
                 "lo": 1,
@@ -3131,15 +3131,15 @@
                 "hi": 0.5629835483511324
               },
               "pr_auc": {
-                "lo": 0.6961665213196417,
-                "hi": 0.8865456582650445
+                "lo": 0.9505152080845888,
+                "hi": 0.994481503898397
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 58,
-              "precision": 0.7586,
-              "recall": 0.8
+              "cases": 69,
+              "precision": 0.7971,
+              "recall": 1
             },
             "per_modus": {
               "PHANTOM_BILLING": {
@@ -3174,8 +3174,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 11,
-                "hit": 0,
-                "recall": 0
+                "hit": 11,
+                "recall": 1
               }
             }
           },
@@ -3185,43 +3185,43 @@
             "fraud_rate": 0.02594,
             "capacity_1pct": {
               "k": 22,
-              "precision": 0.9091,
-              "recall": 0.3636,
-              "lift": 35.04,
-              "rupiah_recall": 0.4309
+              "precision": 1,
+              "recall": 0.4,
+              "lift": 38.55,
+              "rupiah_recall": 0.616
             },
             "capacity_3pct": {
               "k": 64,
-              "precision": 0.4531,
-              "recall": 0.5273,
-              "lift": 17.47,
-              "rupiah_recall": 0.4874
+              "precision": 0.625,
+              "recall": 0.7273,
+              "lift": 24.09,
+              "rupiah_recall": 0.8408
             },
-            "pr_auc": 0.5176,
-            "roc_auc": 0.7612,
+            "pr_auc": 0.725,
+            "roc_auc": 0.862,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.6363636363636364,
+                "lo": 0.8636363636363636,
                 "hi": 1
               },
               "recall_1pct": {
-                "lo": 0.2711864406779661,
-                "hi": 0.43902439024390244
+                "lo": 0.3055555555555556,
+                "hi": 0.5135135135135135
               },
               "rupiah_recall_1pct": {
-                "lo": 0.2779592747173675,
-                "hi": 0.5656224568707287
+                "lo": 0.4235829818980689,
+                "hi": 0.7923537628252643
               },
               "pr_auc": {
-                "lo": 0.3845535204648404,
-                "hi": 0.6514166801408374
+                "lo": 0.6043383527134851,
+                "hi": 0.8211550903510708
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 38,
-              "precision": 0.7368,
-              "recall": 0.5091
+              "cases": 49,
+              "precision": 0.7959,
+              "recall": 0.7091
             },
             "per_modus": {
               "PHANTOM_BILLING": {
@@ -3256,8 +3256,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 11,
-                "hit": 0,
-                "recall": 0
+                "hit": 11,
+                "recall": 1
               }
             }
           },
@@ -3356,36 +3356,36 @@
             },
             "capacity_3pct": {
               "k": 64,
-              "precision": 0.375,
-              "recall": 0.4364,
-              "lift": 14.45,
-              "rupiah_recall": 0.3311
+              "precision": 0.5469,
+              "recall": 0.6364,
+              "lift": 21.08,
+              "rupiah_recall": 0.6844
             },
-            "pr_auc": 0.4634,
-            "roc_auc": 0.715,
+            "pr_auc": 0.6433,
+            "roc_auc": 0.8158,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.6818181818181818,
+                "lo": 0.8181818181818182,
                 "hi": 1
               },
               "recall_1pct": {
-                "lo": 0.2894736842105263,
-                "hi": 0.4883720930232558
+                "lo": 0.3055555555555556,
+                "hi": 0.5116279069767442
               },
               "rupiah_recall_1pct": {
-                "lo": 0.17753373383921892,
-                "hi": 0.44567453935515533
+                "lo": 0.19816040553283037,
+                "hi": 0.5003767640703087
               },
               "pr_auc": {
-                "lo": 0.33800070569102547,
-                "hi": 0.6078400658909926
+                "lo": 0.5188783408814271,
+                "hi": 0.7780486282076053
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 32,
-              "precision": 0.75,
-              "recall": 0.4364
+              "cases": 43,
+              "precision": 0.814,
+              "recall": 0.6364
             },
             "per_modus": {
               "PHANTOM_BILLING": {
@@ -3420,8 +3420,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 11,
-                "hit": 0,
-                "recall": 0
+                "hit": 11,
+                "recall": 1
               }
             }
           }
@@ -3459,13 +3459,13 @@
             },
             "capacity_3pct": {
               "k": 62,
-              "precision": 0.8065,
-              "recall": 0.7937,
-              "lift": 26.4,
-              "rupiah_recall": 0.5056
+              "precision": 0.8871,
+              "recall": 0.873,
+              "lift": 29.03,
+              "rupiah_recall": 0.8485
             },
-            "pr_auc": 0.8293,
-            "roc_auc": 0.9258,
+            "pr_auc": 0.9315,
+            "roc_auc": 0.9904,
             "ci95": {
               "precision_1pct": {
                 "lo": 0.9523809523809523,
@@ -3480,21 +3480,21 @@
                 "hi": 0.3775647747135425
               },
               "pr_auc": {
-                "lo": 0.7264337011778791,
-                "hi": 0.9096959158980982
+                "lo": 0.8605474097814048,
+                "hi": 0.9801912214470463
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 68,
-              "precision": 0.7941,
-              "recall": 0.8571
+              "cases": 76,
+              "precision": 0.8158,
+              "recall": 0.9841
             },
             "per_modus": {
               "REPEAT_BILLING": {
                 "n": 8,
-                "hit": 0,
-                "recall": 0
+                "hit": 8,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 10,
@@ -3539,49 +3539,49 @@
             "fraud_rate": 0.03055,
             "capacity_1pct": {
               "k": 21,
-              "precision": 0.9524,
-              "recall": 0.3175,
-              "lift": 31.17,
-              "rupiah_recall": 0.2643
+              "precision": 1,
+              "recall": 0.3333,
+              "lift": 32.73,
+              "rupiah_recall": 0.6364
             },
             "capacity_3pct": {
               "k": 62,
-              "precision": 0.5806,
-              "recall": 0.5714,
-              "lift": 19,
-              "rupiah_recall": 0.3578
+              "precision": 0.7097,
+              "recall": 0.6984,
+              "lift": 23.23,
+              "rupiah_recall": 0.8114
             },
-            "pr_auc": 0.5678,
-            "roc_auc": 0.7836,
+            "pr_auc": 0.6926,
+            "roc_auc": 0.8474,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.7142857142857143,
+                "lo": 0.8571428571428571,
                 "hi": 1
               },
               "recall_1pct": {
-                "lo": 0.2537313432835821,
-                "hi": 0.39622641509433965
+                "lo": 0.26582278481012656,
+                "hi": 0.44680851063829785
               },
               "rupiah_recall_1pct": {
-                "lo": 0.1675312653411446,
-                "hi": 0.3995613177364954
+                "lo": 0.3945832795519905,
+                "hi": 0.7642543347982548
               },
               "pr_auc": {
-                "lo": 0.4237187676764194,
-                "hi": 0.6841336725524102
+                "lo": 0.5701628621717455,
+                "hi": 0.8114017449260411
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 46,
-              "precision": 0.7609,
-              "recall": 0.5556
+              "cases": 54,
+              "precision": 0.7963,
+              "recall": 0.6825
             },
             "per_modus": {
               "REPEAT_BILLING": {
                 "n": 8,
-                "hit": 0,
-                "recall": 0
+                "hit": 8,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 10,
@@ -3720,13 +3720,13 @@
             },
             "capacity_3pct": {
               "k": 62,
-              "precision": 0.5484,
-              "recall": 0.5397,
-              "lift": 17.95,
-              "rupiah_recall": 0.347
+              "precision": 0.6774,
+              "recall": 0.6667,
+              "lift": 22.17,
+              "rupiah_recall": 0.8006
             },
-            "pr_auc": 0.5662,
-            "roc_auc": 0.766,
+            "pr_auc": 0.6577,
+            "roc_auc": 0.8298,
             "ci95": {
               "precision_1pct": {
                 "lo": 0.9047619047619048,
@@ -3741,21 +3741,21 @@
                 "hi": 0.3894884380320159
               },
               "pr_auc": {
-                "lo": 0.4310499493586414,
-                "hi": 0.6735705745739173
+                "lo": 0.5271301219937322,
+                "hi": 0.7628862478985687
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 48,
-              "precision": 0.7083,
-              "recall": 0.5397
+              "cases": 56,
+              "precision": 0.75,
+              "recall": 0.6667
             },
             "per_modus": {
               "REPEAT_BILLING": {
                 "n": 8,
-                "hit": 0,
-                "recall": 0
+                "hit": 8,
+                "recall": 1
               },
               "PROCEDURE_MISMATCH": {
                 "n": 10,
@@ -3828,13 +3828,13 @@
             },
             "capacity_3pct": {
               "k": 61,
-              "precision": 0.7869,
-              "recall": 0.8276,
-              "lift": 27.32,
-              "rupiah_recall": 0.748
+              "precision": 0.8689,
+              "recall": 0.9138,
+              "lift": 30.17,
+              "rupiah_recall": 0.954
             },
-            "pr_auc": 0.8047,
-            "roc_auc": 0.9115,
+            "pr_auc": 0.9394,
+            "roc_auc": 0.9902,
             "ci95": {
               "precision_1pct": {
                 "lo": 0.8571428571428571,
@@ -3849,15 +3849,15 @@
                 "hi": 0.5347376683483838
               },
               "pr_auc": {
-                "lo": 0.6927324524890867,
-                "hi": 0.9036150073732178
+                "lo": 0.8734210573973532,
+                "hi": 0.9899278014370663
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 61,
-              "precision": 0.7869,
-              "recall": 0.8276
+              "cases": 70,
+              "precision": 0.8143,
+              "recall": 0.9828
             },
             "per_modus": {
               "PHANTOM_BILLING": {
@@ -3882,8 +3882,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 9,
-                "hit": 0,
-                "recall": 0
+                "hit": 9,
+                "recall": 1
               },
               "UNBUNDLING": {
                 "n": 8,
@@ -3908,43 +3908,43 @@
             "fraud_rate": 0.0288,
             "capacity_1pct": {
               "k": 21,
-              "precision": 0.8095,
-              "recall": 0.2931,
-              "lift": 28.11,
-              "rupiah_recall": 0.3293
+              "precision": 1,
+              "recall": 0.3621,
+              "lift": 34.72,
+              "rupiah_recall": 0.517
             },
             "capacity_3pct": {
               "k": 61,
-              "precision": 0.5082,
-              "recall": 0.5345,
-              "lift": 17.65,
-              "rupiah_recall": 0.4855
+              "precision": 0.6557,
+              "recall": 0.6897,
+              "lift": 22.77,
+              "rupiah_recall": 0.7347
             },
-            "pr_auc": 0.5093,
-            "roc_auc": 0.7645,
+            "pr_auc": 0.6746,
+            "roc_auc": 0.8426,
             "ci95": {
               "precision_1pct": {
-                "lo": 0.5714285714285714,
+                "lo": 0.7619047619047619,
                 "hi": 1
               },
               "recall_1pct": {
-                "lo": 0.2191780821917808,
-                "hi": 0.40384615384615385
+                "lo": 0.273972602739726,
+                "hi": 0.45652173913043476
               },
               "rupiah_recall_1pct": {
-                "lo": 0.17603131051719606,
-                "hi": 0.46704982429971065
+                "lo": 0.3398299866319168,
+                "hi": 0.6362186265428863
               },
               "pr_auc": {
-                "lo": 0.3583138925026644,
-                "hi": 0.6473479429894557
+                "lo": 0.5348319723422741,
+                "hi": 0.7813838688402027
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 41,
-              "precision": 0.7073,
-              "recall": 0.5
+              "cases": 50,
+              "precision": 0.76,
+              "recall": 0.6552
             },
             "per_modus": {
               "PHANTOM_BILLING": {
@@ -3969,8 +3969,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 9,
-                "hit": 0,
-                "recall": 0
+                "hit": 9,
+                "recall": 1
               },
               "UNBUNDLING": {
                 "n": 8,
@@ -4089,13 +4089,13 @@
             },
             "capacity_3pct": {
               "k": 61,
-              "precision": 0.459,
-              "recall": 0.4828,
-              "lift": 15.94,
-              "rupiah_recall": 0.4771
+              "precision": 0.6066,
+              "recall": 0.6379,
+              "lift": 21.06,
+              "rupiah_recall": 0.7263
             },
-            "pr_auc": 0.4984,
-            "roc_auc": 0.7371,
+            "pr_auc": 0.6168,
+            "roc_auc": 0.8152,
             "ci95": {
               "precision_1pct": {
                 "lo": 0.7619047619047619,
@@ -4110,15 +4110,15 @@
                 "hi": 0.571693389819135
               },
               "pr_auc": {
-                "lo": 0.34733774452162797,
-                "hi": 0.6546970303543759
+                "lo": 0.47783749479048543,
+                "hi": 0.7533101421503762
               }
             },
             "queue_at_case_threshold": {
               "threshold": 45,
-              "cases": 39,
-              "precision": 0.7179,
-              "recall": 0.4828
+              "cases": 48,
+              "precision": 0.7708,
+              "recall": 0.6379
             },
             "per_modus": {
               "PHANTOM_BILLING": {
@@ -4143,8 +4143,8 @@
               },
               "REPEAT_BILLING": {
                 "n": 9,
-                "hit": 0,
-                "recall": 0
+                "hit": 9,
+                "recall": 1
               },
               "UNBUNDLING": {
                 "n": 8,
@@ -4662,59 +4662,59 @@
         "n_runs": 6,
         "full": {
           "precision_at_1pct": {
-            "mean": 0.8381,
-            "min": 0.4762,
+            "mean": 0.8623,
+            "min": 0.5714,
             "max": 1
           },
           "recall_at_1pct": {
-            "mean": 0.5739,
+            "mean": 0.61,
             "min": 0.3333,
-            "max": 0.85
+            "max": 1
           },
           "lift_at_1pct": {
-            "mean": 55.9117,
+            "mean": 59.4133,
             "min": 32.73,
-            "max": 82.28
+            "max": 97
           },
           "rupiah_recall_at_1pct": {
-            "mean": 0.5478,
+            "mean": 0.583,
             "min": 0.2384,
-            "max": 0.851
+            "max": 1
           },
           "precision_at_3pct": {
-            "mean": 0.5051,
-            "min": 0.1613,
-            "max": 0.8065
+            "mean": 0.5832,
+            "min": 0.1935,
+            "max": 0.8871
           },
           "recall_at_3pct": {
-            "mean": 0.822,
-            "min": 0.7273,
-            "max": 0.95
+            "mean": 0.9614,
+            "min": 0.873,
+            "max": 1
           },
           "rupiah_recall_at_3pct": {
-            "mean": 0.7175,
-            "min": 0.5056,
-            "max": 0.9381
+            "mean": 0.9632,
+            "min": 0.8485,
+            "max": 1
           },
           "pr_auc": {
-            "mean": 0.7863,
-            "min": 0.629,
-            "max": 0.9006
+            "mean": 0.9225,
+            "min": 0.8406,
+            "max": 0.9774
           },
           "roc_auc": {
-            "mean": 0.9136,
-            "min": 0.8578,
-            "max": 0.9739
+            "mean": 0.9962,
+            "min": 0.9902,
+            "max": 0.9995
           },
           "queue_precision": {
-            "mean": 0.749,
-            "min": 0.6667,
-            "max": 0.7941
+            "mean": 0.782,
+            "min": 0.7059,
+            "max": 0.8158
           },
           "queue_recall": {
-            "mean": 0.8326,
-            "min": 0.7273,
-            "max": 0.95
+            "mean": 0.9945,
+            "min": 0.9828,
+            "max": 1
           },
           "per_modus_pooled": {
             "UPCODING": {
@@ -4737,11 +4737,11 @@
             },
             "REPEAT_BILLING": {
               "n": 37,
-              "hit": 0,
-              "recall": 0,
+              "hit": 37,
+              "recall": 1,
               "ci95": {
-                "lo": 0,
-                "hi": 0.0941
+                "lo": 0.9059,
+                "hi": 1
               }
             },
             "PROCEDURE_MISMATCH": {
@@ -4793,59 +4793,59 @@
         },
         "no_ml": {
           "precision_at_1pct": {
-            "mean": 0.7087,
-            "min": 0.381,
-            "max": 0.9524
+            "mean": 0.8294,
+            "min": 0.4762,
+            "max": 1
           },
           "recall_at_1pct": {
-            "mean": 0.4667,
-            "min": 0.2931,
-            "max": 0.75
+            "mean": 0.5608,
+            "min": 0.3333,
+            "max": 0.8333
           },
           "lift_at_1pct": {
-            "mean": 45.4,
-            "min": 28.11,
-            "max": 72.6
+            "mean": 54.625,
+            "min": 32.73,
+            "max": 80.83
           },
           "rupiah_recall_at_1pct": {
-            "mean": 0.4564,
-            "min": 0.2643,
-            "max": 0.7352
+            "mean": 0.673,
+            "min": 0.517,
+            "max": 0.7971
           },
           "precision_at_3pct": {
-            "mean": 0.3458,
-            "min": 0.129,
-            "max": 0.5806
+            "mean": 0.4455,
+            "min": 0.1613,
+            "max": 0.7097
           },
           "recall_at_3pct": {
-            "mean": 0.5765,
-            "min": 0.4091,
-            "max": 0.75
+            "mean": 0.7384,
+            "min": 0.6818,
+            "max": 0.8333
           },
           "rupiah_recall_at_3pct": {
-            "mean": 0.5074,
-            "min": 0.3325,
-            "max": 0.7352
+            "mean": 0.7827,
+            "min": 0.7172,
+            "max": 0.8408
           },
           "pr_auc": {
-            "mean": 0.5526,
-            "min": 0.4009,
-            "max": 0.7046
+            "mean": 0.7189,
+            "min": 0.6746,
+            "max": 0.7878
           },
           "roc_auc": {
-            "mean": 0.7866,
-            "min": 0.7035,
-            "max": 0.8744
+            "mean": 0.8679,
+            "min": 0.8403,
+            "max": 0.9159
           },
           "queue_precision": {
-            "mean": 0.7077,
-            "min": 0.6154,
-            "max": 0.7895
+            "mean": 0.7635,
+            "min": 0.6923,
+            "max": 0.8
           },
           "queue_recall": {
-            "mean": 0.5436,
-            "min": 0.3636,
-            "max": 0.75
+            "mean": 0.7055,
+            "min": 0.6364,
+            "max": 0.8
           },
           "per_modus_pooled": {
             "UPCODING": {
@@ -4868,11 +4868,11 @@
             },
             "REPEAT_BILLING": {
               "n": 37,
-              "hit": 0,
-              "recall": 0,
+              "hit": 37,
+              "recall": 1,
               "ci95": {
-                "lo": 0,
-                "hi": 0.0941
+                "lo": 0.9059,
+                "hi": 1
               }
             },
             "PROCEDURE_MISMATCH": {
@@ -5055,59 +5055,59 @@
         },
         "no_cross": {
           "precision_at_1pct": {
-            "mean": 0.7563,
-            "min": 0.381,
+            "mean": 0.8138,
+            "min": 0.4762,
             "max": 1
           },
           "recall_at_1pct": {
-            "mean": 0.4855,
+            "mean": 0.5519,
             "min": 0.3333,
-            "max": 0.6667
+            "max": 0.8333
           },
           "lift_at_1pct": {
-            "mean": 47.33,
+            "mean": 53.8517,
             "min": 32.73,
-            "max": 64.67
+            "max": 81.61
           },
           "rupiah_recall_at_1pct": {
-            "mean": 0.4518,
+            "mean": 0.5097,
             "min": 0.2404,
-            "max": 0.6867
+            "max": 0.8357
           },
           "precision_at_3pct": {
-            "mean": 0.3219,
-            "min": 0.129,
-            "max": 0.5484
+            "mean": 0.4215,
+            "min": 0.1613,
+            "max": 0.6774
           },
           "recall_at_3pct": {
-            "mean": 0.552,
-            "min": 0.4364,
-            "max": 0.6667
+            "mean": 0.7139,
+            "min": 0.6,
+            "max": 0.9091
           },
           "rupiah_recall_at_3pct": {
-            "mean": 0.4872,
-            "min": 0.3311,
-            "max": 0.6867
+            "mean": 0.7625,
+            "min": 0.6493,
+            "max": 0.8787
           },
           "pr_auc": {
-            "mean": 0.5614,
-            "min": 0.4634,
-            "max": 0.6655
+            "mean": 0.6986,
+            "min": 0.5871,
+            "max": 0.8734
           },
           "roc_auc": {
-            "mean": 0.7731,
-            "min": 0.715,
-            "max": 0.8321
+            "mean": 0.8547,
+            "min": 0.7978,
+            "max": 0.9536
           },
           "queue_precision": {
-            "mean": 0.7344,
-            "min": 0.6667,
-            "max": 0.7857
+            "mean": 0.7804,
+            "min": 0.7143,
+            "max": 0.8333
           },
           "queue_recall": {
-            "mean": 0.552,
-            "min": 0.4364,
-            "max": 0.6667
+            "mean": 0.7139,
+            "min": 0.6,
+            "max": 0.9091
           },
           "per_modus_pooled": {
             "UPCODING": {
@@ -5130,11 +5130,11 @@
             },
             "REPEAT_BILLING": {
               "n": 37,
-              "hit": 0,
-              "recall": 0,
+              "hit": 37,
+              "recall": 1,
               "ci95": {
-                "lo": 0,
-                "hi": 0.0941
+                "lo": 0.9059,
+                "hi": 1
               }
             },
             "PROCEDURE_MISMATCH": {
@@ -5228,20 +5228,20 @@
       "hard": {
         "full": {
           "n": 37,
-          "hit": 0,
-          "recall": 0,
+          "hit": 37,
+          "recall": 1,
           "ci95": {
-            "lo": 0,
-            "hi": 0.0941
+            "lo": 0.9059,
+            "hi": 1
           }
         },
         "no_ml": {
           "n": 37,
-          "hit": 0,
-          "recall": 0,
+          "hit": 37,
+          "recall": 1,
           "ci95": {
-            "lo": 0,
-            "hi": 0.0941
+            "lo": 0.9059,
+            "hi": 1
           }
         },
         "no_rules": {
@@ -5255,11 +5255,11 @@
         },
         "no_cross": {
           "n": 37,
-          "hit": 0,
-          "recall": 0,
+          "hit": 37,
+          "recall": 1,
           "ci95": {
-            "lo": 0,
-            "hi": 0.0941
+            "lo": 0.9059,
+            "hi": 1
           }
         }
       }
@@ -5267,20 +5267,20 @@
     "impact_inputs": {
       "rupiah_recall": {
         "low": 0.2384,
-        "mid": 0.5478,
-        "high": 0.851
+        "mid": 0.583,
+        "high": 1
       },
-      "source": "rupiah recall @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run"
+      "source": "recall nilai dipertanyakan @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run"
     },
     "saturation_note": "PR-AUC rata-rata >= 0,95: ini dibaca sebagai bukti mekanisme (pola fraud di generator dan detektor sejalan), bukan akurasi pada data nyata. Lihat set hard."
   },
   "impact_inputs": {
     "rupiah_recall": {
       "low": 0.2384,
-      "mid": 0.5478,
-      "high": 0.851
+      "mid": 0.583,
+      "high": 1
     },
-    "source": "rupiah recall @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run"
+    "source": "recall nilai dipertanyakan @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run"
   },
   "data_card": [
     {
@@ -7302,43 +7302,43 @@
           "fraud_rate": 0.00589,
           "capacity_1pct": {
             "k": 21,
-            "precision": 0.4762,
-            "recall": 0.8333,
-            "lift": 80.83,
-            "rupiah_recall": 0.851
+            "precision": 0.5714,
+            "recall": 1,
+            "lift": 97,
+            "rupiah_recall": 1
           },
           "capacity_3pct": {
             "k": 62,
-            "precision": 0.1613,
-            "recall": 0.8333,
-            "lift": 27.38,
-            "rupiah_recall": 0.851
+            "precision": 0.1935,
+            "recall": 1,
+            "lift": 32.85,
+            "rupiah_recall": 1
           },
-          "pr_auc": 0.7625,
-          "roc_auc": 0.9143,
+          "pr_auc": 0.9008,
+          "roc_auc": 0.9995,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.23809523809523808,
-              "hi": 0.7619047619047619
+              "lo": 0.3333333333333333,
+              "hi": 0.8571428571428571
             },
             "recall_1pct": {
-              "lo": 0.5714285714285714,
+              "lo": 1,
               "hi": 1
             },
             "rupiah_recall_1pct": {
-              "lo": 0.5755900262127284,
+              "lo": 1,
               "hi": 1
             },
             "pr_auc": {
-              "lo": 0.4635639312025526,
+              "lo": 0.7096043411088659,
               "hi": 1
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 15,
-            "precision": 0.6667,
-            "recall": 0.8333
+            "cases": 17,
+            "precision": 0.7059,
+            "recall": 1
           },
           "per_modus": {
             "UPCODING": {
@@ -7353,8 +7353,8 @@
             },
             "REPEAT_BILLING": {
               "n": 2,
-              "hit": 0,
-              "recall": 0
+              "hit": 2,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 2,
@@ -7384,43 +7384,43 @@
           "fraud_rate": 0.00589,
           "capacity_1pct": {
             "k": 21,
-            "precision": 0.381,
-            "recall": 0.6667,
-            "lift": 64.67,
-            "rupiah_recall": 0.6462
+            "precision": 0.4762,
+            "recall": 0.8333,
+            "lift": 80.83,
+            "rupiah_recall": 0.7952
           },
           "capacity_3pct": {
             "k": 62,
-            "precision": 0.129,
-            "recall": 0.6667,
-            "lift": 21.9,
-            "rupiah_recall": 0.6462
+            "precision": 0.1613,
+            "recall": 0.8333,
+            "lift": 27.38,
+            "rupiah_recall": 0.7952
           },
-          "pr_auc": 0.6157,
-          "roc_auc": 0.8324,
+          "pr_auc": 0.7878,
+          "roc_auc": 0.9159,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.19047619047619047,
-              "hi": 0.6190476190476191
+              "lo": 0.23809523809523808,
+              "hi": 0.7142857142857143
             },
             "recall_1pct": {
-              "lo": 0.38461538461538464,
-              "hi": 0.9090909090909091
+              "lo": 0.6,
+              "hi": 1
             },
             "rupiah_recall_1pct": {
-              "lo": 0.33719753942049824,
-              "hi": 0.9616383447968373
+              "lo": 0.5175073688377804,
+              "hi": 1
             },
             "pr_auc": {
-              "lo": 0.2946625723446395,
-              "hi": 0.820284817484306
+              "lo": 0.4878224033526723,
+              "hi": 0.9571428571428572
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 11,
-            "precision": 0.6364,
-            "recall": 0.5833
+            "cases": 13,
+            "precision": 0.6923,
+            "recall": 0.75
           },
           "per_modus": {
             "UPCODING": {
@@ -7435,8 +7435,8 @@
             },
             "REPEAT_BILLING": {
               "n": 2,
-              "hit": 0,
-              "recall": 0
+              "hit": 2,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 2,
@@ -7548,43 +7548,43 @@
           "fraud_rate": 0.00589,
           "capacity_1pct": {
             "k": 21,
-            "precision": 0.381,
-            "recall": 0.6667,
-            "lift": 64.67,
-            "rupiah_recall": 0.6867
+            "precision": 0.4762,
+            "recall": 0.8333,
+            "lift": 80.83,
+            "rupiah_recall": 0.8357
           },
           "capacity_3pct": {
             "k": 62,
-            "precision": 0.129,
-            "recall": 0.6667,
-            "lift": 21.9,
-            "rupiah_recall": 0.6867
+            "precision": 0.1613,
+            "recall": 0.8333,
+            "lift": 27.38,
+            "rupiah_recall": 0.8357
           },
-          "pr_auc": 0.6655,
-          "roc_auc": 0.8321,
+          "pr_auc": 0.8133,
+          "roc_auc": 0.916,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.14285714285714285,
-              "hi": 0.6190476190476191
+              "lo": 0.23809523809523808,
+              "hi": 0.7619047619047619
             },
             "recall_1pct": {
-              "lo": 0.35714285714285715,
-              "hi": 0.9166666666666666
+              "lo": 0.5714285714285714,
+              "hi": 1
             },
             "rupiah_recall_1pct": {
-              "lo": 0.3086895910173546,
-              "hi": 0.9372602065648203
+              "lo": 0.5466170820245809,
+              "hi": 1
             },
             "pr_auc": {
-              "lo": 0.3486870758987009,
-              "hi": 0.9028034948698548
+              "lo": 0.5234117513815918,
+              "hi": 1
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 12,
-            "precision": 0.6667,
-            "recall": 0.6667
+            "cases": 14,
+            "precision": 0.7143,
+            "recall": 0.8333
           },
           "per_modus": {
             "UPCODING": {
@@ -7599,8 +7599,8 @@
             },
             "REPEAT_BILLING": {
               "n": 2,
-              "hit": 0,
-              "recall": 0
+              "hit": 2,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 2,
@@ -7658,42 +7658,42 @@
           },
           "capacity_3pct": {
             "k": 60,
-            "precision": 0.2667,
-            "recall": 0.7273,
-            "lift": 24.18,
-            "rupiah_recall": 0.6153
+            "precision": 0.3667,
+            "recall": 1,
+            "lift": 33.25,
+            "rupiah_recall": 1
           },
-          "pr_auc": 0.629,
-          "roc_auc": 0.8578,
+          "pr_auc": 0.8406,
+          "roc_auc": 0.9984,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.45,
-              "hi": 0.85
+              "lo": 0.5,
+              "hi": 0.9
             },
             "recall_1pct": {
-              "lo": 0.4444444444444444,
-              "hi": 0.9230769230769231
+              "lo": 0.45714285714285713,
+              "hi": 1
             },
             "rupiah_recall_1pct": {
               "lo": 0.294348835652699,
-              "hi": 0.8985871985448616
+              "hi": 1
             },
             "pr_auc": {
-              "lo": 0.413614778595108,
-              "hi": 0.835256671238973
+              "lo": 0.712176052420437,
+              "hi": 0.9553174397511626
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 23,
-            "precision": 0.6957,
-            "recall": 0.7273
+            "cases": 29,
+            "precision": 0.7586,
+            "recall": 1
           },
           "per_modus": {
             "REPEAT_BILLING": {
               "n": 6,
-              "hit": 0,
-              "recall": 0
+              "hit": 6,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 2,
@@ -7728,49 +7728,49 @@
           "fraud_rate": 0.01103,
           "capacity_1pct": {
             "k": 20,
-            "precision": 0.45,
-            "recall": 0.4091,
-            "lift": 40.81,
-            "rupiah_recall": 0.3325
+            "precision": 0.7,
+            "recall": 0.6364,
+            "lift": 63.48,
+            "rupiah_recall": 0.6764
           },
           "capacity_3pct": {
             "k": 60,
-            "precision": 0.15,
-            "recall": 0.4091,
-            "lift": 13.6,
-            "rupiah_recall": 0.3325
+            "precision": 0.25,
+            "recall": 0.6818,
+            "lift": 22.67,
+            "rupiah_recall": 0.7172
           },
-          "pr_auc": 0.4009,
-          "roc_auc": 0.7035,
+          "pr_auc": 0.6762,
+          "roc_auc": 0.8403,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.2,
-              "hi": 0.7
+              "lo": 0.4,
+              "hi": 1
             },
             "recall_1pct": {
-              "lo": 0.2,
-              "hi": 0.625
+              "lo": 0.5,
+              "hi": 0.8888888888888888
             },
             "rupiah_recall_1pct": {
-              "lo": 0.13290932544119488,
-              "hi": 0.6447683399388676
+              "lo": 0.42561927547426986,
+              "hi": 0.9351099257845363
             },
             "pr_auc": {
-              "lo": 0.20365499213541274,
-              "hi": 0.6036163341889589
+              "lo": 0.49022182676675563,
+              "hi": 0.8776520795912505
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 13,
-            "precision": 0.6154,
-            "recall": 0.3636
+            "cases": 19,
+            "precision": 0.7368,
+            "recall": 0.6364
           },
           "per_modus": {
             "REPEAT_BILLING": {
               "n": 6,
-              "hit": 0,
-              "recall": 0
+              "hit": 6,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 2,
@@ -7882,49 +7882,49 @@
           "fraud_rate": 0.01103,
           "capacity_1pct": {
             "k": 20,
-            "precision": 0.7,
-            "recall": 0.6364,
-            "lift": 63.48,
-            "rupiah_recall": 0.494
+            "precision": 0.9,
+            "recall": 0.8182,
+            "lift": 81.61,
+            "rupiah_recall": 0.6303
           },
           "capacity_3pct": {
             "k": 60,
-            "precision": 0.2333,
-            "recall": 0.6364,
-            "lift": 21.16,
-            "rupiah_recall": 0.494
+            "precision": 0.3333,
+            "recall": 0.9091,
+            "lift": 30.23,
+            "rupiah_recall": 0.8787
           },
-          "pr_auc": 0.6335,
-          "roc_auc": 0.8156,
+          "pr_auc": 0.8734,
+          "roc_auc": 0.9536,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.35,
-              "hi": 0.95
+              "lo": 0.6,
+              "hi": 1
             },
             "recall_1pct": {
-              "lo": 0.4375,
-              "hi": 0.8235294117647058
+              "lo": 0.625,
+              "hi": 1
             },
             "rupiah_recall_1pct": {
-              "lo": 0.27862985798639683,
-              "hi": 0.7936639937955234
+              "lo": 0.4432371618089114,
+              "hi": 1
             },
             "pr_auc": {
-              "lo": 0.4432195578902405,
-              "hi": 0.8095648594197495
+              "lo": 0.7307141247592271,
+              "hi": 0.9817801404957179
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 18,
-            "precision": 0.7778,
-            "recall": 0.6364
+            "cases": 24,
+            "precision": 0.8333,
+            "recall": 0.9091
           },
           "per_modus": {
             "REPEAT_BILLING": {
               "n": 6,
-              "hit": 0,
-              "recall": 0
+              "hit": 6,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 2,
@@ -7980,20 +7980,20 @@
           "fraud_rate": 0.01033,
           "capacity_1pct": {
             "k": 20,
-            "precision": 0.85,
-            "recall": 0.85,
-            "lift": 82.28,
-            "rupiah_recall": 0.8147
+            "precision": 0.9,
+            "recall": 0.9,
+            "lift": 87.12,
+            "rupiah_recall": 0.8765
           },
           "capacity_3pct": {
             "k": 59,
-            "precision": 0.322,
-            "recall": 0.95,
-            "lift": 31.17,
-            "rupiah_recall": 0.9381
+            "precision": 0.339,
+            "recall": 1,
+            "lift": 32.81,
+            "rupiah_recall": 1
           },
-          "pr_auc": 0.9006,
-          "roc_auc": 0.9739,
+          "pr_auc": 0.9455,
+          "roc_auc": 0.9995,
           "ci95": {
             "precision_1pct": {
               "lo": 0.55,
@@ -8008,15 +8008,15 @@
               "hi": 1
             },
             "pr_auc": {
-              "lo": 0.7706026640567246,
-              "hi": 0.9965217391304348
+              "lo": 0.8566077441077442,
+              "hi": 1
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 24,
-            "precision": 0.7917,
-            "recall": 0.95
+            "cases": 25,
+            "precision": 0.8,
+            "recall": 1
           },
           "per_modus": {
             "PROLONGED_LOS": {
@@ -8051,8 +8051,8 @@
             },
             "REPEAT_BILLING": {
               "n": 1,
-              "hit": 0,
-              "recall": 0
+              "hit": 1,
+              "recall": 1
             },
             "UNBUNDLING": {
               "n": 1,
@@ -8067,43 +8067,43 @@
           "fraud_rate": 0.01033,
           "capacity_1pct": {
             "k": 20,
-            "precision": 0.75,
-            "recall": 0.75,
-            "lift": 72.6,
-            "rupiah_recall": 0.7352
+            "precision": 0.8,
+            "recall": 0.8,
+            "lift": 77.44,
+            "rupiah_recall": 0.7971
           },
           "capacity_3pct": {
             "k": 59,
-            "precision": 0.2542,
-            "recall": 0.75,
-            "lift": 24.61,
-            "rupiah_recall": 0.7352
+            "precision": 0.2712,
+            "recall": 0.8,
+            "lift": 26.25,
+            "rupiah_recall": 0.7971
           },
-          "pr_auc": 0.7046,
-          "roc_auc": 0.8744,
+          "pr_auc": 0.7574,
+          "roc_auc": 0.8994,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.3,
+              "lo": 0.4,
               "hi": 1
             },
             "recall_1pct": {
-              "lo": 0.5,
-              "hi": 0.9333333333333333
+              "lo": 0.5357142857142857,
+              "hi": 0.95
             },
             "rupiah_recall_1pct": {
-              "lo": 0.46060817011522637,
-              "hi": 0.986116127281088
+              "lo": 0.5297776242649963,
+              "hi": 0.9938048166914569
             },
             "pr_auc": {
-              "lo": 0.47552163289986704,
-              "hi": 0.9239979584566302
+              "lo": 0.5499303158598496,
+              "hi": 0.9377093833365596
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 19,
-            "precision": 0.7895,
-            "recall": 0.75
+            "cases": 20,
+            "precision": 0.8,
+            "recall": 0.8
           },
           "per_modus": {
             "PROLONGED_LOS": {
@@ -8138,8 +8138,8 @@
             },
             "REPEAT_BILLING": {
               "n": 1,
-              "hit": 0,
-              "recall": 0
+              "hit": 1,
+              "recall": 1
             },
             "UNBUNDLING": {
               "n": 1,
@@ -8241,43 +8241,43 @@
           "fraud_rate": 0.01033,
           "capacity_1pct": {
             "k": 20,
-            "precision": 0.55,
-            "recall": 0.55,
-            "lift": 53.24,
-            "rupiah_recall": 0.5874
+            "precision": 0.6,
+            "recall": 0.6,
+            "lift": 58.08,
+            "rupiah_recall": 0.6493
           },
           "capacity_3pct": {
             "k": 59,
-            "precision": 0.1864,
-            "recall": 0.55,
-            "lift": 18.05,
-            "rupiah_recall": 0.5874
+            "precision": 0.2034,
+            "recall": 0.6,
+            "lift": 19.69,
+            "rupiah_recall": 0.6493
           },
-          "pr_auc": 0.5411,
-          "roc_auc": 0.7725,
+          "pr_auc": 0.5871,
+          "roc_auc": 0.7978,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.25,
-              "hi": 0.9
+              "lo": 0.3,
+              "hi": 0.95
             },
             "recall_1pct": {
-              "lo": 0.2857142857142857,
-              "hi": 0.8235294117647058
+              "lo": 0.34615384615384615,
+              "hi": 0.8888888888888888
             },
             "rupiah_recall_1pct": {
-              "lo": 0.3451729853972711,
-              "hi": 0.8607670485136778
+              "lo": 0.38835886681105247,
+              "hi": 0.9334539951886172
             },
             "pr_auc": {
-              "lo": 0.28934421698735113,
-              "hi": 0.8143746023256321
+              "lo": 0.33344922965180795,
+              "hi": 0.8761683876363665
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 14,
-            "precision": 0.7857,
-            "recall": 0.55
+            "cases": 15,
+            "precision": 0.8,
+            "recall": 0.6
           },
           "per_modus": {
             "PROLONGED_LOS": {
@@ -8312,8 +8312,8 @@
             },
             "REPEAT_BILLING": {
               "n": 1,
-              "hit": 0,
-              "recall": 0
+              "hit": 1,
+              "recall": 1
             },
             "UNBUNDLING": {
               "n": 1,
@@ -8356,13 +8356,13 @@
           },
           "capacity_3pct": {
             "k": 64,
-            "precision": 0.6875,
-            "recall": 0.8,
-            "lift": 26.5,
-            "rupiah_recall": 0.6467
+            "precision": 0.8438,
+            "recall": 0.9818,
+            "lift": 32.52,
+            "rupiah_recall": 0.9765
           },
-          "pr_auc": 0.7917,
-          "roc_auc": 0.8983,
+          "pr_auc": 0.9774,
+          "roc_auc": 0.9994,
           "ci95": {
             "precision_1pct": {
               "lo": 1,
@@ -8377,15 +8377,15 @@
               "hi": 0.5629835483511324
             },
             "pr_auc": {
-              "lo": 0.6961665213196417,
-              "hi": 0.8865456582650445
+              "lo": 0.9505152080845888,
+              "hi": 0.994481503898397
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 58,
-            "precision": 0.7586,
-            "recall": 0.8
+            "cases": 69,
+            "precision": 0.7971,
+            "recall": 1
           },
           "per_modus": {
             "PHANTOM_BILLING": {
@@ -8420,8 +8420,8 @@
             },
             "REPEAT_BILLING": {
               "n": 11,
-              "hit": 0,
-              "recall": 0
+              "hit": 11,
+              "recall": 1
             }
           }
         },
@@ -8431,43 +8431,43 @@
           "fraud_rate": 0.02594,
           "capacity_1pct": {
             "k": 22,
-            "precision": 0.9091,
-            "recall": 0.3636,
-            "lift": 35.04,
-            "rupiah_recall": 0.4309
+            "precision": 1,
+            "recall": 0.4,
+            "lift": 38.55,
+            "rupiah_recall": 0.616
           },
           "capacity_3pct": {
             "k": 64,
-            "precision": 0.4531,
-            "recall": 0.5273,
-            "lift": 17.47,
-            "rupiah_recall": 0.4874
+            "precision": 0.625,
+            "recall": 0.7273,
+            "lift": 24.09,
+            "rupiah_recall": 0.8408
           },
-          "pr_auc": 0.5176,
-          "roc_auc": 0.7612,
+          "pr_auc": 0.725,
+          "roc_auc": 0.862,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.6363636363636364,
+              "lo": 0.8636363636363636,
               "hi": 1
             },
             "recall_1pct": {
-              "lo": 0.2711864406779661,
-              "hi": 0.43902439024390244
+              "lo": 0.3055555555555556,
+              "hi": 0.5135135135135135
             },
             "rupiah_recall_1pct": {
-              "lo": 0.2779592747173675,
-              "hi": 0.5656224568707287
+              "lo": 0.4235829818980689,
+              "hi": 0.7923537628252643
             },
             "pr_auc": {
-              "lo": 0.3845535204648404,
-              "hi": 0.6514166801408374
+              "lo": 0.6043383527134851,
+              "hi": 0.8211550903510708
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 38,
-            "precision": 0.7368,
-            "recall": 0.5091
+            "cases": 49,
+            "precision": 0.7959,
+            "recall": 0.7091
           },
           "per_modus": {
             "PHANTOM_BILLING": {
@@ -8502,8 +8502,8 @@
             },
             "REPEAT_BILLING": {
               "n": 11,
-              "hit": 0,
-              "recall": 0
+              "hit": 11,
+              "recall": 1
             }
           }
         },
@@ -8602,36 +8602,36 @@
           },
           "capacity_3pct": {
             "k": 64,
-            "precision": 0.375,
-            "recall": 0.4364,
-            "lift": 14.45,
-            "rupiah_recall": 0.3311
+            "precision": 0.5469,
+            "recall": 0.6364,
+            "lift": 21.08,
+            "rupiah_recall": 0.6844
           },
-          "pr_auc": 0.4634,
-          "roc_auc": 0.715,
+          "pr_auc": 0.6433,
+          "roc_auc": 0.8158,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.6818181818181818,
+              "lo": 0.8181818181818182,
               "hi": 1
             },
             "recall_1pct": {
-              "lo": 0.2894736842105263,
-              "hi": 0.4883720930232558
+              "lo": 0.3055555555555556,
+              "hi": 0.5116279069767442
             },
             "rupiah_recall_1pct": {
-              "lo": 0.17753373383921892,
-              "hi": 0.44567453935515533
+              "lo": 0.19816040553283037,
+              "hi": 0.5003767640703087
             },
             "pr_auc": {
-              "lo": 0.33800070569102547,
-              "hi": 0.6078400658909926
+              "lo": 0.5188783408814271,
+              "hi": 0.7780486282076053
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 32,
-            "precision": 0.75,
-            "recall": 0.4364
+            "cases": 43,
+            "precision": 0.814,
+            "recall": 0.6364
           },
           "per_modus": {
             "PHANTOM_BILLING": {
@@ -8666,8 +8666,8 @@
             },
             "REPEAT_BILLING": {
               "n": 11,
-              "hit": 0,
-              "recall": 0
+              "hit": 11,
+              "recall": 1
             }
           }
         }
@@ -8705,13 +8705,13 @@
           },
           "capacity_3pct": {
             "k": 62,
-            "precision": 0.8065,
-            "recall": 0.7937,
-            "lift": 26.4,
-            "rupiah_recall": 0.5056
+            "precision": 0.8871,
+            "recall": 0.873,
+            "lift": 29.03,
+            "rupiah_recall": 0.8485
           },
-          "pr_auc": 0.8293,
-          "roc_auc": 0.9258,
+          "pr_auc": 0.9315,
+          "roc_auc": 0.9904,
           "ci95": {
             "precision_1pct": {
               "lo": 0.9523809523809523,
@@ -8726,21 +8726,21 @@
               "hi": 0.3775647747135425
             },
             "pr_auc": {
-              "lo": 0.7264337011778791,
-              "hi": 0.9096959158980982
+              "lo": 0.8605474097814048,
+              "hi": 0.9801912214470463
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 68,
-            "precision": 0.7941,
-            "recall": 0.8571
+            "cases": 76,
+            "precision": 0.8158,
+            "recall": 0.9841
           },
           "per_modus": {
             "REPEAT_BILLING": {
               "n": 8,
-              "hit": 0,
-              "recall": 0
+              "hit": 8,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 10,
@@ -8785,49 +8785,49 @@
           "fraud_rate": 0.03055,
           "capacity_1pct": {
             "k": 21,
-            "precision": 0.9524,
-            "recall": 0.3175,
-            "lift": 31.17,
-            "rupiah_recall": 0.2643
+            "precision": 1,
+            "recall": 0.3333,
+            "lift": 32.73,
+            "rupiah_recall": 0.6364
           },
           "capacity_3pct": {
             "k": 62,
-            "precision": 0.5806,
-            "recall": 0.5714,
-            "lift": 19,
-            "rupiah_recall": 0.3578
+            "precision": 0.7097,
+            "recall": 0.6984,
+            "lift": 23.23,
+            "rupiah_recall": 0.8114
           },
-          "pr_auc": 0.5678,
-          "roc_auc": 0.7836,
+          "pr_auc": 0.6926,
+          "roc_auc": 0.8474,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.7142857142857143,
+              "lo": 0.8571428571428571,
               "hi": 1
             },
             "recall_1pct": {
-              "lo": 0.2537313432835821,
-              "hi": 0.39622641509433965
+              "lo": 0.26582278481012656,
+              "hi": 0.44680851063829785
             },
             "rupiah_recall_1pct": {
-              "lo": 0.1675312653411446,
-              "hi": 0.3995613177364954
+              "lo": 0.3945832795519905,
+              "hi": 0.7642543347982548
             },
             "pr_auc": {
-              "lo": 0.4237187676764194,
-              "hi": 0.6841336725524102
+              "lo": 0.5701628621717455,
+              "hi": 0.8114017449260411
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 46,
-            "precision": 0.7609,
-            "recall": 0.5556
+            "cases": 54,
+            "precision": 0.7963,
+            "recall": 0.6825
           },
           "per_modus": {
             "REPEAT_BILLING": {
               "n": 8,
-              "hit": 0,
-              "recall": 0
+              "hit": 8,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 10,
@@ -8966,13 +8966,13 @@
           },
           "capacity_3pct": {
             "k": 62,
-            "precision": 0.5484,
-            "recall": 0.5397,
-            "lift": 17.95,
-            "rupiah_recall": 0.347
+            "precision": 0.6774,
+            "recall": 0.6667,
+            "lift": 22.17,
+            "rupiah_recall": 0.8006
           },
-          "pr_auc": 0.5662,
-          "roc_auc": 0.766,
+          "pr_auc": 0.6577,
+          "roc_auc": 0.8298,
           "ci95": {
             "precision_1pct": {
               "lo": 0.9047619047619048,
@@ -8987,21 +8987,21 @@
               "hi": 0.3894884380320159
             },
             "pr_auc": {
-              "lo": 0.4310499493586414,
-              "hi": 0.6735705745739173
+              "lo": 0.5271301219937322,
+              "hi": 0.7628862478985687
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 48,
-            "precision": 0.7083,
-            "recall": 0.5397
+            "cases": 56,
+            "precision": 0.75,
+            "recall": 0.6667
           },
           "per_modus": {
             "REPEAT_BILLING": {
               "n": 8,
-              "hit": 0,
-              "recall": 0
+              "hit": 8,
+              "recall": 1
             },
             "PROCEDURE_MISMATCH": {
               "n": 10,
@@ -9074,13 +9074,13 @@
           },
           "capacity_3pct": {
             "k": 61,
-            "precision": 0.7869,
-            "recall": 0.8276,
-            "lift": 27.32,
-            "rupiah_recall": 0.748
+            "precision": 0.8689,
+            "recall": 0.9138,
+            "lift": 30.17,
+            "rupiah_recall": 0.954
           },
-          "pr_auc": 0.8047,
-          "roc_auc": 0.9115,
+          "pr_auc": 0.9394,
+          "roc_auc": 0.9902,
           "ci95": {
             "precision_1pct": {
               "lo": 0.8571428571428571,
@@ -9095,15 +9095,15 @@
               "hi": 0.5347376683483838
             },
             "pr_auc": {
-              "lo": 0.6927324524890867,
-              "hi": 0.9036150073732178
+              "lo": 0.8734210573973532,
+              "hi": 0.9899278014370663
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 61,
-            "precision": 0.7869,
-            "recall": 0.8276
+            "cases": 70,
+            "precision": 0.8143,
+            "recall": 0.9828
           },
           "per_modus": {
             "PHANTOM_BILLING": {
@@ -9128,8 +9128,8 @@
             },
             "REPEAT_BILLING": {
               "n": 9,
-              "hit": 0,
-              "recall": 0
+              "hit": 9,
+              "recall": 1
             },
             "UNBUNDLING": {
               "n": 8,
@@ -9154,43 +9154,43 @@
           "fraud_rate": 0.0288,
           "capacity_1pct": {
             "k": 21,
-            "precision": 0.8095,
-            "recall": 0.2931,
-            "lift": 28.11,
-            "rupiah_recall": 0.3293
+            "precision": 1,
+            "recall": 0.3621,
+            "lift": 34.72,
+            "rupiah_recall": 0.517
           },
           "capacity_3pct": {
             "k": 61,
-            "precision": 0.5082,
-            "recall": 0.5345,
-            "lift": 17.65,
-            "rupiah_recall": 0.4855
+            "precision": 0.6557,
+            "recall": 0.6897,
+            "lift": 22.77,
+            "rupiah_recall": 0.7347
           },
-          "pr_auc": 0.5093,
-          "roc_auc": 0.7645,
+          "pr_auc": 0.6746,
+          "roc_auc": 0.8426,
           "ci95": {
             "precision_1pct": {
-              "lo": 0.5714285714285714,
+              "lo": 0.7619047619047619,
               "hi": 1
             },
             "recall_1pct": {
-              "lo": 0.2191780821917808,
-              "hi": 0.40384615384615385
+              "lo": 0.273972602739726,
+              "hi": 0.45652173913043476
             },
             "rupiah_recall_1pct": {
-              "lo": 0.17603131051719606,
-              "hi": 0.46704982429971065
+              "lo": 0.3398299866319168,
+              "hi": 0.6362186265428863
             },
             "pr_auc": {
-              "lo": 0.3583138925026644,
-              "hi": 0.6473479429894557
+              "lo": 0.5348319723422741,
+              "hi": 0.7813838688402027
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 41,
-            "precision": 0.7073,
-            "recall": 0.5
+            "cases": 50,
+            "precision": 0.76,
+            "recall": 0.6552
           },
           "per_modus": {
             "PHANTOM_BILLING": {
@@ -9215,8 +9215,8 @@
             },
             "REPEAT_BILLING": {
               "n": 9,
-              "hit": 0,
-              "recall": 0
+              "hit": 9,
+              "recall": 1
             },
             "UNBUNDLING": {
               "n": 8,
@@ -9335,13 +9335,13 @@
           },
           "capacity_3pct": {
             "k": 61,
-            "precision": 0.459,
-            "recall": 0.4828,
-            "lift": 15.94,
-            "rupiah_recall": 0.4771
+            "precision": 0.6066,
+            "recall": 0.6379,
+            "lift": 21.06,
+            "rupiah_recall": 0.7263
           },
-          "pr_auc": 0.4984,
-          "roc_auc": 0.7371,
+          "pr_auc": 0.6168,
+          "roc_auc": 0.8152,
           "ci95": {
             "precision_1pct": {
               "lo": 0.7619047619047619,
@@ -9356,15 +9356,15 @@
               "hi": 0.571693389819135
             },
             "pr_auc": {
-              "lo": 0.34733774452162797,
-              "hi": 0.6546970303543759
+              "lo": 0.47783749479048543,
+              "hi": 0.7533101421503762
             }
           },
           "queue_at_case_threshold": {
             "threshold": 45,
-            "cases": 39,
-            "precision": 0.7179,
-            "recall": 0.4828
+            "cases": 48,
+            "precision": 0.7708,
+            "recall": 0.6379
           },
           "per_modus": {
             "PHANTOM_BILLING": {
@@ -9389,8 +9389,8 @@
             },
             "REPEAT_BILLING": {
               "n": 9,
-              "hit": 0,
-              "recall": 0
+              "hit": 9,
+              "recall": 1
             },
             "UNBUNDLING": {
               "n": 8,
@@ -9605,42 +9605,42 @@
       "baseline": {
         "n": 150,
         "concurrency": 8,
-        "mean_ms": 14.6,
-        "p50_ms": 14.2,
-        "p95_ms": 17.3,
-        "p99_ms": 18.5,
-        "tps": 100.7,
+        "mean_ms": 26.5,
+        "p50_ms": 26,
+        "p95_ms": 33.7,
+        "p99_ms": 35.7,
+        "tps": 38.5,
         "errors": 0
       },
       "proposed": {
         "n": 150,
         "concurrency": 8,
-        "mean_ms": 15.5,
-        "p50_ms": 14.8,
-        "p95_ms": 19.2,
-        "p99_ms": 21,
-        "tps": 104.1,
+        "mean_ms": 28.5,
+        "p50_ms": 28.2,
+        "p95_ms": 34.6,
+        "p99_ms": 35.9,
+        "tps": 50.7,
         "errors": 0
       },
       "overhead": {
-        "p95_abs_ms": 1.9,
-        "mean_pct": 6.2,
-        "p95_pct": 11,
-        "tps_pct": 3.4
+        "p95_abs_ms": 0.9,
+        "mean_pct": 7.5,
+        "p95_pct": 2.7,
+        "tps_pct": 31.7
       },
       "note": "Satu mesin, penyimpanan memori, layanan ml aktif. Latensi absolut dengan Postgres lewat jaringan lebih tinggi."
     },
     "verify": {
       "n": 120,
-      "p50_ms": 17.2,
-      "p95_ms": 22.1,
-      "max_ms": 30.7
+      "p50_ms": 24.2,
+      "p95_ms": 31.6,
+      "max_ms": 50.9
     },
     "upload": {
       "rows": 1000,
       "accepted": 1000,
-      "seconds": 6.53,
-      "rows_per_sec": 153.3
+      "seconds": 3.12,
+      "rows_per_sec": 321
     },
     "security": {
       "total": 23,
@@ -9889,5 +9889,5 @@
       "evidence-hard.html"
     ]
   },
-  "duration_seconds": 257
+  "duration_seconds": 433
 }

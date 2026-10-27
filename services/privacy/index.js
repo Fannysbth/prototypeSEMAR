@@ -43,7 +43,7 @@ const reidentifySchema = z.object({
 const revokeSchema = z.object({ subject_id: z.string().min(3).max(64).optional(), pseudonym: z.string().regex(/^PSE_[A-Z]{3}_[0-9A-F]{20}$/).optional(), actor: z.object({ id: z.string().min(1).max(60) }) })
   .refine((v) => v.subject_id || v.pseudonym, 'subject_id atau pseudonym wajib');
 const eventSchema = z.object({
-  action: z.enum(['CASE_STATUS', 'THRESHOLD_CHANGE']), actor: z.string().min(1).max(60), role: z.string().max(30),
+  action: z.enum(['CASE_STATUS', 'THRESHOLD_CHANGE', 'FILE_REQUEST', 'FILE_REPLY', 'CASE_ESCALATE']), actor: z.string().min(1).max(60), role: z.string().max(30),
   target: z.string().max(80).optional(), reason: z.string().max(500).optional(),
 });
 

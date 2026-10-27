@@ -29,14 +29,14 @@ export function simulateImpact(p) {
   return {
     inputs: p,
     result: {
-      potensi_fraud_rp: Math.round(potential), ...direview, fraud_terjaring_rp: Math.round(inQueue),
+      potensi_nilai_dipertanyakan_rp: Math.round(potential), ...direview, nilai_terdeteksi_rp: Math.round(inQueue),
       potensi_pemulihan_rp: Math.round(recoverable), biaya_operasional_rp: p.biaya_operasional, potensi_penghematan_bersih_rp: Math.round(net),
       rasio_manfaat_biaya: p.biaya_operasional > 0 ? +(recoverable / p.biaya_operasional).toFixed(2) : null,
     },
     assumptions: [
-      'Potensi fraud = nilai klaim tahunan x fraud_rate (fraud_rate adalah asumsi, bukan temuan).',
-      'Terdeteksi = potensi fraud x rupiah_recall pada kapasitas review 1% klaim (angka dari npm run evaluate pada data sintetis; kapasitas 1% adalah asumsi).',
-      'Pemulihan = fraud terjaring x recovery_rate (asumsi proporsi yang berhasil dipulihkan).',
+      'Potensi nilai dipertanyakan = nilai klaim tahunan x fraud_rate (fraud_rate adalah asumsi, bukan temuan; ini bukan kerugian terkonfirmasi).',
+      'Nilai terdeteksi = potensi nilai dipertanyakan x rupiah_recall (recall nilai dipertanyakan) pada kapasitas review 1% klaim (angka dari npm run evaluate pada data sintetis; kapasitas 1% adalah asumsi).',
+      'Pemulihan = nilai terdeteksi x recovery_rate (asumsi proporsi yang berhasil dipulihkan).',
       'Ini simulasi dari asumsi yang bisa diubah, bukan klaim penghematan.',
     ],
   };

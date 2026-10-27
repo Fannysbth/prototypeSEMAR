@@ -49,7 +49,7 @@ test('LLM: timeout atau galat -> templat', async () => {
 
 test('simulasi dampak: hitungan benar, asumsi ikut dikembalikan, parameter divalidasi', () => {
   const r = simulateImpact(impactSchema.parse({ annual_claim_value: 1e12, fraud_rate: 0.03, review_capacity: 0.01, precision_at_k: 0.5, recovery_rate: 0.6, biaya_operasional: 1e9 }));
-  assert.equal(r.result.potensi_fraud_rp, 3e10); assert.equal(r.result.fraud_terjaring_rp, 5e9);
+  assert.equal(r.result.potensi_nilai_dipertanyakan_rp, 3e10); assert.equal(r.result.nilai_terdeteksi_rp, 5e9);
   assert.equal(r.result.potensi_pemulihan_rp, 3e9); assert.equal(r.result.potensi_penghematan_bersih_rp, 2e9);
   assert.ok(r.assumptions.length >= 4);
   assert.throws(() => impactSchema.parse({ annual_claim_value: 1, fraud_rate: 2, review_capacity: 0, precision_at_k: 0, recovery_rate: 0 }));

@@ -8,7 +8,7 @@ export const THRESHOLDS = {
   cloneWindowDays: 7,
   cloneMinPatients: 3,     // klaim identik dari >= 3 pasien berbeda di faskes sama
   unbundleDays: 2,
-  repeatDays: 30,
+  repeatDays: 90,          // klaim ganda: diagnosis + tindakan + faskes + nominal sama dalam 90 hari
   upcodeRatio: 1.5,        // nominal >= 1.5x median referensi, atau
   upcodeZ: 4.5,            // robust z-score >= 4.5
   caseScore: 45,

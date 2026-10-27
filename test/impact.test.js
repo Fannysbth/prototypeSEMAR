@@ -5,8 +5,8 @@ import { simulateImpact, impactSchema, impactScenarios } from '../services/gatew
 
 test('rumus 07-model-bisnis: tidak wajar -> terdeteksi (rupiah recall) -> tertahan (recovery) -> manfaat bersih', () => {
   const r = simulateImpact(impactSchema.parse({ annual_claim_value: 1e12, fraud_rate: 0.03, rupiah_recall: 0.4, recovery_rate: 0.5, biaya_operasional: 1e9 }));
-  assert.equal(r.result.potensi_fraud_rp, 3e10);
-  assert.equal(r.result.fraud_terjaring_rp, 1.2e10);
+  assert.equal(r.result.potensi_nilai_dipertanyakan_rp, 3e10);
+  assert.equal(r.result.nilai_terdeteksi_rp, 1.2e10);
   assert.equal(r.result.potensi_pemulihan_rp, 6e9);
   assert.equal(r.result.potensi_penghematan_bersih_rp, 5e9);
   assert.equal(r.result.rasio_manfaat_biaya, 6);

@@ -12,7 +12,7 @@ import { ALL, DAY, THRESHOLDS } from './detectors.js';
 
 export const ENGINE_VERSION = 'samar-fraud-2.0';
 export const WEIGHTS = JSON.parse(fs.readFileSync(path.join(ROOT, 'config', 'weights.json'), 'utf8'));
-export const CASE_STATUSES = ['BARU', 'DITINJAU', 'BUTUH_INFO', 'TERKONFIRMASI', 'DITOLAK_FALSE_POSITIVE', 'SELESAI'];
+export const CASE_STATUSES = ['BARU', 'DITINJAU', 'BUTUH_INFO', 'MENUNGGU_FASKES', 'ESKALASI', 'TERKONFIRMASI', 'DITOLAK_FALSE_POSITIVE', 'SELESAI'];
 export const FEATURE_NAMES = [
   'n_faskes_30d', 'n_kunjungan_30d', 'n_rs_7d', 'overlap_inap_hari', 'same_diag_multi_faskes_14d', 'referral_loop',
   'los_vs_median_inacbg', 'billed_vs_median_inacbg', 'n_prosedur_terpisah_sehari', 'klaim_identik_7h', 'tindakan_tidak_lazim',
@@ -38,7 +38,7 @@ export function buildObservation(input, now = Date.now()) {
 }
 
 export async function loadContext(observations, obs) {
-  const win = 30 * DAY;
+  const win = 90 * DAY; // jendela terlebar (REPEAT_BILLING 90 hari); fitur dan detektor lain menyaring sendiri ke 30 hari
   const sameRef = await observations.find(
     { eq: { fraud_ref: obs.fraud_ref }, ne: { claim_id: obs.claim_id }, gte: { admit_ms: obs.admit_ms - win }, lte: { admit_ms: obs.admit_ms + win } },
     { orderBy: 'admit_ms', dir: 'asc', limit: 300 },
@@ -214,7 +214,7 @@ export function createEngine({ observations, cases, events, settings, forest, ml
       await cases.put(id, {
         case_id: id, claim_id: obs.claim_id, facility_id: obs.facility_id, fraud_ref: obs.fraud_ref,
         facilities: [...new Set([obs.facility_id, ...ctx.sameRef.map((o) => o.facility_id)])].sort(),
-        diagnosis_code: obs.diagnosis_code, amount: obs.amount, admit_date: obs.admit_date, excess_amount: estimateExcess(obs, flags),
+        diagnosis_code: obs.diagnosis_code, amount: obs.amount, admit_date: obs.admit_date, potensi_nilai_dipertanyakan: estimateExcess(obs, flags),
         risk_score: score, risk_level: level, modi: [...new Set(flags.map((f) => f.modus))], flags, features, ml_status: m.status,
         status: 'BARU', created_ms: obs.created_ms, updated_ms: obs.created_ms, reviews: [],
       });
@@ -272,7 +272,7 @@ export function createEngine({ observations, cases, events, settings, forest, ml
     const confirmed = reviewed.filter((c) => c.status === 'TERKONFIRMASI').length;
     return {
       total_cases: all.length, by_status: by('status'), by_level: by('risk_level'), by_modus: by('modi'), by_facility: by('facilities'),
-      excess_total: all.reduce((s, c) => s + (c.excess_amount || 0), 0),
+      potensi_nilai_dipertanyakan_total: all.reduce((s, c) => s + (c.potensi_nilai_dipertanyakan || 0), 0),
       analyzed_claims: await observations.count({}),
       review_precision: reviewed.length ? +(confirmed / reviewed.length).toFixed(3) : null,
       engine_version: ENGINE_VERSION,
