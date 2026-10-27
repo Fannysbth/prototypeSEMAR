@@ -1,0 +1,139 @@
+openapi: 3.0.3
+info:
+  title: SAMAR API
+  version: 1.0.0
+  description: Deteksi fraud klaim JKN lintas faskes di atas data terpseudonimisasi. Data contoh sintetis.
+servers:
+  - url: http://localhost:3000/api/v1
+security:
+  - bearer: []
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties: { code: { type: string }, message: { type: string } }
+    ClaimInput:
+      type: object
+      required: [claim_id, level, participant_id, facility_id, admit_date, diagnosis_primary, billed_amount]
+      properties:
+        claim_id: { type: string }
+        level: { type: string, enum: [FKTP, FKRTL, PNK] }
+        participant_id: { type: string, description: Ditokenisasi di gateway }
+        facility_id: { type: string }
+        admit_date: { type: string, format: date }
+        discharge_date: { type: string, format: date }
+        diagnosis_primary: { type: string, description: ICD-10 }
+        diagnosis_secondary: { type: array, items: { type: string } }
+        procedures: { type: array, items: { type: string }, description: ICD-9-CM }
+        inacbg_code: { type: string }
+        billed_amount: { type: number }
+    Signal:
+      type: object
+      properties:
+        detector: { type: string }
+        score: { type: number }
+        reason: { type: string }
+    VerifyResult:
+      type: object
+      properties:
+        claim_id: { type: string }
+        subject_token: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        risk: { type: string, enum: [NONE, LOW, MED, HIGH] }
+        case_id: { type: string, nullable: true }
+        signals: { type: array, items: { $ref: '#/components/schemas/Signal' } }
+        explanation: { type: string }
+        explanation_source: { type: string, enum: [llm, template] }
+        model_version: { type: string }
+        latency_ms: { type: integer }
+    Case:
+      type: object
+      properties:
+        id: { type: string }
+        subject_token: { type: string }
+        score: { type: integer }
+        risk: { type: string }
+        modus: { type: array, items: { type: string } }
+        status: { type: string, enum: [BARU, DITINJAU, BUTUH_INFO, TERKONFIRMASI, DITOLAK_FALSE_POSITIVE, SELESAI] }
+        facilities: { type: array, items: { type: string } }
+        excess_amount: { type: number }
+        created_at: { type: string, format: date-time }
+paths:
+  /auth/login:
+    post:
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { username: { type: string }, password: { type: string } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { token: { type: string }, role: { type: string } } } } } }
+        '401': { description: Gagal, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /claims/upload:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema: { type: object, properties: { file: { type: string, format: binary }, level: { type: string, enum: [FKTP, FKRTL, PNK] } } }
+      responses:
+        '202': { description: Diterima, content: { application/json: { schema: { type: object, properties: { batch_id: { type: string }, accepted: { type: integer }, rejected: { type: integer } } } } } }
+  /verify:
+    post:
+      requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/ClaimInput' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/VerifyResult' } } } }
+        '422': { description: Validasi gagal, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /cases:
+    get:
+      parameters:
+        - { name: risk, in: query, schema: { type: string } }
+        - { name: modus, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: faskes, in: query, schema: { type: string } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Case' } } } } }
+  /cases/{id}:
+    parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+    get:
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } } } }
+    patch:
+      requestBody: { content: { application/json: { schema: { type: object, properties: { status: { type: string }, note: { type: string } } } } } }
+      responses: { '200': { description: OK } }
+  /cases/{id}/reveal:
+    parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+    post:
+      requestBody: { content: { application/json: { schema: { type: object, required: [reason], properties: { reason: { type: string, minLength: 20 } } } } } }
+      responses:
+        '200': { description: Identitas dibuka dan tercatat di audit }
+        '403': { description: Peran tidak berhak }
+        '429': { description: Kuota habis }
+  /tokens/revoke:
+    post:
+      requestBody: { content: { application/json: { schema: { type: object, properties: { subject_token: { type: string }, reason: { type: string } } } } } }
+      responses: { '200': { description: OK } }
+  /impact/simulate:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                annual_claim_value: { type: number }
+                fraud_rate: { type: number }
+                review_capacity: { type: number }
+                precision_at_k: { type: number }
+                recovery_rate: { type: number }
+      responses: { '200': { description: Hasil simulasi beserta asumsi } }
+  /export/evalkit:
+    get:
+      responses: { '200': { description: Zip berisi scores.csv, truth.csv, cases.csv } }
+  /health:
+    get:
+      security: []
+      responses: { '200': { description: OK } }

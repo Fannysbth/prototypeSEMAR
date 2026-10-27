@@ -4,14 +4,17 @@
   "description": "SAMAR - Pseudonimisasi dinamis sebagai enabler deteksi kecurangan klaim lintas-faskes JKN (prototipe Healthkathon 2026)",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node scripts/dev.js",
     "test": "node scripts/run-tests.js",
     "evaluate": "node scripts/evaluate.js",
     "reset": "node scripts/reset.js",
     "reset:neon": "node scripts/reset.js --drop-schemas",
-    "gen-secrets": "node scripts/gen-secrets.js"
+    "gen-secrets": "node scripts/gen-secrets.js",
+    "generate-data": "node scripts/generate-data/index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -14,6 +14,7 @@ import { asyncHandler, createBaseApp, errorHandler, HttpError, notFound, serve }
 import { createClients } from './clients.js';
 import { createPipeline, ensureMode } from './pipeline.js';
 import { buildClaimSchema, loginSchema, reviewSchema, revealSchema, revokeSchema } from './schemas.js';
+import { createUploader } from './upload.js';
 import { runScenario, scenarioList } from './simulate.js';
 
 const config = getConfig();
@@ -21,6 +22,7 @@ const logger = createLogger('gateway', config.logLevel, config.isProd);
 const clients = createClients(config);
 const pipeline = createPipeline({ config, clients, logger });
 const claimSchema = buildClaimSchema({ syntheticOnly: config.syntheticOnly });
+const uploader = createUploader({ claimSchema, pipeline, mode: 'proposed' });
 const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 
 const app = createBaseApp({ service: 'gateway', config });
@@ -71,6 +73,15 @@ app.post('/api/claims', authenticate, requireRole('facility'), asyncHandler(asyn
   if (idem !== undefined && !/^[A-Za-z0-9_\-]{8,64}$/.test(String(idem))) throw new HttpError(400, 'INVALID_IDEMPOTENCY_KEY', 'Idempotency-Key 8-64 karakter alfanumerik');
   res.status(201).json(await pipeline.submitClaim({ claim, facility_id: req.user.facility_id, mode, actor: req.user, idempotencyKey: idem ? String(idem) : undefined, requestId: req.id }));
 }));
+app.post('/api/claims/upload', authenticate, requireRole('facility', 'verifier'), express.text({ type: 'text/csv', limit: '20mb' }), asyncHandler(async (req, res) => {
+  if (typeof req.body !== 'string') throw new HttpError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Kirim CSV dengan Content-Type: text/csv');
+  res.json(await uploader.upload({ csv: req.body, user: req.user, requestId: req.id }));
+}));
+app.get('/api/claims/batches/:id', authenticate, requireRole('facility', 'verifier'), (req, res) => {
+  const b = uploader.get(req.params.id);
+  if (!b || b.uploaded_by !== req.user.sub) throw new HttpError(404, 'NOT_FOUND', 'Batch tidak ditemukan');
+  res.json(b);
+});
 app.get('/api/claims', authenticate, requireRole('facility', 'verifier'), asyncHandler(async (req, res) => {
   const q = req.user.role === 'facility' ? `?facility_id=${encodeURIComponent(req.user.facility_id)}&limit=50` : '?limit=50';
   res.json(await clients.claims.list(q));

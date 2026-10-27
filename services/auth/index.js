@@ -1,4 +1,4 @@
-// AUTH SERVICE - login & penerbitan JWT (HS256) dengan peran: facility | verifier.
+// AUTH SERVICE - login & penerbitan JWT (HS256) dengan peran: facility | verifier | auditor | admin.
 import crypto from 'node:crypto';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
@@ -18,10 +18,12 @@ const checkPw = (pw, stored) => {
 };
 
 // Pengguna DEMO (hanya saat DEMO_MODE). Di production isi AUTH_USERS_JSON:
-// [{"username":"...","password":"...","role":"facility|verifier","facility_id":"RS-A","name":"..."}]
+// [{"username":"...","password":"...","role":"facility|verifier|auditor|admin","facility_id":"RS-A","name":"..."}]
 const DEMO_USERS = [
   ...FACILITIES.map((f) => ({ username: `rs.${f.name.split(' ')[1].toLowerCase()}`, password: `demo-${f.name.split(' ')[1].toLowerCase()}`, role: 'facility', facility_id: f.id, name: f.name })),
   { username: 'verifikator', password: 'demo-verifikator', role: 'verifier', name: 'Verifikator BPJS (demo)' },
+  { username: 'auditor', password: 'demo-auditor', role: 'auditor', name: 'Auditor SPI (demo)' },
+  { username: 'admin', password: 'demo-admin', role: 'admin', name: 'Admin / DPO (demo)' },
 ];
 let users;
 if (config.authUsersJson) users = JSON.parse(config.authUsersJson);
