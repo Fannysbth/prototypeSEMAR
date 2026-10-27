@@ -16,7 +16,7 @@ async function setup({ key = 'k'.repeat(64), now = Date.UTC(2026, 9, 1), maxReid
   const core = createPrivacyCore({ mappings, audit, policy: POLICY, config: { secrets: { HMAC_MASTER_KEY: key }, tokenTtlSeconds: 30 * 86400, reidentifyMaxPerHour: maxReid }, clock: () => clock.now });
   return { core, mappings, audit, clock };
 }
-const verifier = { id: 'v1', role: 'verifier' };
+const verifier = { id: 'v1', role: 'auditor' }; // reveal hanya auditor (spesifikasi PRD)
 const fraudArgs = (pseudonym, extra = {}) => ({ pseudonym, requesting_service: 'FRAUD_DETECTION', purpose: 'CROSS_FACILITY_MATCHING', actor: verifier, case_id: 'CASE-1', justification: 'Investigasi indikasi klaim berulang lintas faskes', ...extra });
 
 test('token deterministik untuk subjek+layanan+tujuan+epoch yang sama (kunci pencocokan lintas-faskes)', async () => {

@@ -1,0 +1,23 @@
+// npm run demo:reset : kosongkan data lokal (dan skema Postgres bila DATABASE_URL diisi), buat data sintetis seed 42
+// dan data latih model ml. Setelah ini: npm start (layanan ml melatih model dari data latih saat start).
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { getConfig } from '../shared/config.js';
+import { dropSchemas } from '../shared/store.js';
+
+const dir = path.dirname(fileURLToPath(import.meta.url));
+const run = (script, ...args) => {
+  const r = spawnSync(process.execPath, [path.join(dir, script), ...args], { stdio: 'inherit' });
+  if (r.status !== 0) { console.error(`${script} gagal`); process.exit(r.status ?? 1); }
+};
+const config = getConfig();
+run('reset.js');
+if (config.store.driver === 'postgres') {
+  await dropSchemas(config.store.databaseUrl, ['privacy', 'claims', 'fraud', 'notify', 'gateway']);
+  console.log('Skema Postgres samar_* dikosongkan.');
+}
+run('generate-data/index.js', '--peserta', '5000', '--seed', '42');
+run('build-training-set.js');
+run('build-demo-batch.js');
+console.log('\nSiap. Jalankan npm start, lalu unggah demo/fkrtl_batch_november.csv (login faskes/verifikator).');

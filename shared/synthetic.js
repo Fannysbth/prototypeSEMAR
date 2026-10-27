@@ -144,7 +144,8 @@ export const SCENARIO_META = {
 };
 
 // ---- Dataset berlabel untuk evaluasi/pelatihan ----
-export function buildDataset({ seed = 2026, normal = 220, base = '2026-06-01', fraud = true } = {}) {
+// chronic: jumlah pasien kronis wajar (hard negative: sering kontrol di faskes sama, jarak 10-14 hari). fraudScale: pengali jumlah skenario fraud.
+export function buildDataset({ seed = 2026, normal = 220, base = '2026-06-01', fraud = true, chronic = 0, fraudScale = 1 } = {}) {
   const rng = makeRng(seed);
   const pf = new PatientFactory(rng);
   const items = [];
@@ -166,9 +167,19 @@ export function buildDataset({ seed = 2026, normal = 220, base = '2026-06-01', f
       push({ step: 'Rujukan sah', facility_id: other, claim: { ...claim, patient_nik: item.claim.patient_nik, patient_name: item.claim.patient_name, phone: item.claim.phone, birth_date: item.claim.birth_date, record_number: `RM-${other.slice(-1)}-X${item.claim.patient_nik.slice(-5)}` }, label: lab(false, null, 'normal') });
     }
   }
+  for (let i = 0; i < chronic; i += 1) {
+    const f = pick(rng, FACILITIES).id; const dx = pick(rng, ['I10', 'E11.9']);
+    const p = pf.next();
+    let day = int(rng, 0, 30);
+    for (let v = 0; v < 4; v += 1) {
+      push({ step: v === 0 ? 'Kontrol rutin kronis' : `Kontrol rutin #${v + 1}`, facility_id: f, claim: { ...baseClaim(rng, p, f, addDays(base, day), { dx, length_of_stay: 1 }), claim_type: 'RJ' }, label: lab(false, null, 'chronic_control') });
+      day += int(rng, 10, 14);
+    }
+  }
   if (fraud) {
     const groups = { self_referral: 8, phantom: 8, cloning: 4, upcoding: 12, unbundling: 8, repeat_billing: 8, prolonged_los: 6 };
-    for (const [name, n] of Object.entries(groups)) {
+    for (const [name, base_n] of Object.entries(groups)) {
+      const n = Math.max(1, Math.round(base_n * fraudScale));
       for (let i = 0; i < n; i += 1) {
         for (const item of SCENARIOS[name](rng, pf, addDays(base, int(rng, 5, 70)))) push(item);
       }

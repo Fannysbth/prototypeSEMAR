@@ -82,6 +82,7 @@ export function getConfig() {
     claims: num(env('CLAIMS_PORT'), 4103),
     fraud: num(env('FRAUD_PORT'), 4104),
     notify: num(env('NOTIFY_PORT'), 4105),
+    ml: num(env('ML_PORT'), 4106),
   };
   const urlOf = (name, port) => env(`${name.toUpperCase()}_URL`, `http://127.0.0.1:${port}`);
 
@@ -96,7 +97,7 @@ export function getConfig() {
     ports,
     urls: {
       auth: urlOf('auth', ports.auth), privacy: urlOf('privacy', ports.privacy),
-      claims: urlOf('claims', ports.claims), fraud: urlOf('fraud', ports.fraud), notify: urlOf('notify', ports.notify),
+      claims: urlOf('claims', ports.claims), fraud: urlOf('fraud', ports.fraud), notify: urlOf('notify', ports.notify), ml: urlOf('ml', ports.ml),
     },
     secrets: resolveSecrets(dataDir, isProd),
     store: { driver: storeDriver, dataDir, databaseUrl },
@@ -104,9 +105,15 @@ export function getConfig() {
     trustProxy: num(env('TRUST_PROXY'), 0),
     tapMax: num(env('TAP_MAX'), 80),
     rateLimitPerMin: num(env('RATE_LIMIT_PER_MIN'), 600),
+    verifyRateLimitPerMin: num(env('VERIFY_RATE_LIMIT_PER_MIN'), 300),
     loginMaxFailsPerMin: num(env('LOGIN_MAX_FAILS_PER_MIN'), 20),
     tokenTtlSeconds: num(env('TOKEN_TTL_SECONDS'), 2592000),
     reidentifyMaxPerHour: num(env('REIDENTIFY_MAX_PER_HOUR'), 10),
+    mlEnabled: bool(env('ML_ENABLED'), true),
+    reidentifyMaxPerDay: num(env('REIDENTIFY_MAX_PER_DAY'), 20),
+    jwtTtlSeconds: num(env('JWT_TTL_SECONDS'), 900),
+    llm: { provider: env('LLM_PROVIDER', 'anthropic'), model: env('LLM_MODEL', ''), apiKey: env('LLM_API_KEY', ''), baseUrl: env('LLM_BASE_URL', ''), timeoutMs: num(env('LLM_TIMEOUT_MS'), 5000) },
+    truthFile: env('TRUTH_FILE', path.join(dataDir, 'synthetic', 'truth.csv')),
     authUsersJson: env('AUTH_USERS_JSON', ''),
   });
   return cached;

@@ -71,7 +71,7 @@ test('human-in-the-loop: review mengubah status & tercatat', async () => {
   const e = await newEngine();
   const [{ r }] = await run(e, 'upcoding');
   const c = await e.review(r.case_id, { decision: 'CONFIRMED_FRAUD', note: 'Dokumen pendukung tidak ada', reviewer: 'v1' });
-  assert.equal(c.status, 'CONFIRMED'); assert.equal(c.reviews.length, 1);
+  assert.equal(c.status, 'TERKONFIRMASI'); assert.equal(c.reviews.length, 1);
   assert.equal(await e.review('CASE-nope', { decision: 'NEEDS_MORE_INFO', note: 'x', reviewer: 'v1' }), null);
   assert.equal((await e.stats()).review_precision, 1);
 });

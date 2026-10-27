@@ -14,7 +14,9 @@
     "reset": "node scripts/reset.js",
     "reset:neon": "node scripts/reset.js --drop-schemas",
     "gen-secrets": "node scripts/gen-secrets.js",
-    "generate-data": "node scripts/generate-data/index.js"
+    "generate-data": "node scripts/generate-data/index.js",
+    "demo:reset": "node scripts/demo-reset.js",
+    "train-data": "node scripts/build-training-set.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -23,6 +25,7 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.1",
+    "swagger-ui-dist": "^5.17.14",
     "zod": "^3.24.1"
   }
 }

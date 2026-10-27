@@ -32,5 +32,19 @@ export const reviewSchema = z.object({
   decision: z.enum(['CONFIRMED_FRAUD', 'DISMISSED_FALSE_POSITIVE', 'NEEDS_MORE_INFO']),
   note: z.string().trim().min(3).max(500),
 }).strict();
-export const revealSchema = z.object({ justification: z.string().trim().min(20, 'alasan minimal 20 karakter').max(500) }).strict();
-export const revokeSchema = z.object({ patient_nik: z.string().regex(/^\d{16}$/) }).strict();
+const reason = z.string().trim().min(20, 'alasan minimal 20 karakter').max(500);
+// Spesifikasi memakai `reason`; prototype memakai `justification`. Keduanya diterima.
+export const revealSchema = z.object({ reason: reason.optional(), justification: reason.optional() }).strict()
+  .refine((v) => v.reason || v.justification, { message: 'reason wajib (minimal 20 karakter)', path: ['reason'] })
+  .transform((v) => ({ justification: v.reason ?? v.justification }));
+export const revokeSchema = z.object({
+  subject_token: z.string().regex(/^PSE_[A-Z]{3}_[0-9A-F]{20}$/).optional(), patient_nik: z.string().regex(/^\d{16}$/).optional(), reason: z.string().trim().max(500).optional(),
+}).strict().refine((v) => v.subject_token || v.patient_nik, { message: 'subject_token atau patient_nik wajib' });
+export const statusSchema = z.object({
+  status: z.enum(['BARU', 'DITINJAU', 'BUTUH_INFO', 'TERKONFIRMASI', 'DITOLAK_FALSE_POSITIVE', 'SELESAI']), note: z.string().trim().max(500).optional(),
+}).strict();
+export const caseQuerySchema = z.object({
+  risk: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(), modus: z.string().regex(/^[A-Z_]+$/).optional(), status: z.string().regex(/^[A-Z_]+$/).optional(),
+  faskes: z.string().max(20).optional(), from: isoDate.optional(), to: isoDate.optional(),
+});
+export const thresholdSchema = z.object({ case_score: z.number().int() }).strict();

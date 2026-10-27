@@ -4,13 +4,14 @@ services:
   db:
     image: postgres:16
     environment: { POSTGRES_USER: samar, POSTGRES_PASSWORD: samar, POSTGRES_DB: samar }
-    ports: ["5432:5432"]
+    ports: ["5433:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
   samar:
     build: .
     ports: ["3000:3000"]
     environment:
       NODE_ENV: production
+      ML_ENABLED: "false"          # image Node tanpa Python: deteksi aturan saja
       DEMO_MODE: "true"            # demo: akun demo + skenario. Hapus untuk mode ketat.
       JWT_SECRET: ${JWT_SECRET:-ganti-jwt-secret-demo-minimal-32-karakter-xx}
       HMAC_MASTER_KEY: ${HMAC_MASTER_KEY:-ganti-master-key-demo-minimal-32-karakter}

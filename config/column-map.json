@@ -1,0 +1,13 @@
+{
+  "_catatan": "Padanan kolom CSV prototype -> kode kamus data BPJS. Hanya kode yang dipastikan dari sosialisasi (PSTV01, PSTV02, FKL02, FKP02, FKL47, FKL48). Kolom lain memakai nama deskriptif; jangan menebak kode. Header CSV boleh memakai nama prototype atau kode BPJS.",
+  "prototype_to_bpjs": {
+    "patient_nik": "PSTV01",
+    "family_id": "PSTV02",
+    "claim_ref": "FKL02",
+    "visit_ref": "FKP02",
+    "amount": "FKL47",
+    "verified_amount": "FKL48"
+  },
+  "diabaikan_saat_unggah": ["family_id", "visit_ref", "verified_amount"],
+  "nama_deskriptif": ["facility_id", "patient_name", "phone", "birth_date", "record_number", "diagnosis_code", "procedure_code", "claim_type", "admit_date", "length_of_stay"]
+}

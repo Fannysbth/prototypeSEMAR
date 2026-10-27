@@ -4,20 +4,17 @@ import { getConfig } from '../../shared/config.js';
 import { createLogger } from '../../shared/logger.js';
 import { createStore } from '../../shared/store.js';
 import { asyncHandler, createBaseApp, createTap, errorHandler, HttpError, mountTap, notFound, requireInternalKey, serve } from '../../shared/http.js';
-import { createEngine, trainForest } from './engine.js';
+import { CASE_STATUSES, createEngine } from './engine.js';
+import { createMlClient } from './ml-client.js';
 
 const config = getConfig();
 const logger = createLogger('fraud', config.logLevel, config.isProd);
 const store = await createStore({ driver: config.store.driver, namespace: 'fraud', dataDir: config.store.dataDir, databaseUrl: config.store.databaseUrl, logger });
 const observations = await store.collection('observations', { indexes: ['fraud_ref', 'fingerprint'], numericIndexes: ['admit_ms'] });
-const cases = await store.collection('cases', { indexes: ['status'], numericIndexes: ['created_ms'] });
-
-// Model dilatih saat start pada klaim NORMAL sintetis (memori). Ganti dengan data historis ber-token di produksi.
-const scratch = await createStore({ driver: 'memory', namespace: 'train' });
-const t0 = Date.now();
-const forest = await trainForest({ createMemoryCollection: () => scratch.collection('obs') });
-logger.info(`Isolation Forest siap (${Date.now() - t0} ms)`);
-const engine = createEngine({ observations, cases, forest });
+const cases = await store.collection('cases', { indexes: ['status', 'risk_level'], numericIndexes: ['created_ms'] });
+const events = await store.collection('case_events', { indexes: ['case_id'], numericIndexes: ['at_ms'] });
+const settings = await store.collection('settings');
+const engine = createEngine({ observations, cases, events, settings, ml: config.mlEnabled ? createMlClient(config) : undefined });
 
 const app = createBaseApp({ service: 'fraud', config });
 const auth = requireInternalKey(config);
@@ -38,24 +35,34 @@ const reviewSchema = z.object({
   decision: z.enum(['CONFIRMED_FRAUD', 'DISMISSED_FALSE_POSITIVE', 'NEEDS_MORE_INFO']),
   note: z.string().trim().min(3).max(500), reviewer: z.string().min(1).max(60),
 });
+const statusSchema = z.object({ status: z.enum(CASE_STATUSES), note: z.string().trim().max(500).optional(), actor: z.string().min(1).max(60) });
+const explanationSchema = z.object({ text: z.string().min(10).max(3000), source: z.enum(['llm', 'template']) });
+const thresholdSchema = z.object({ case_score: z.number().int() });
+const listSchema = z.object({
+  risk: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(), modus: z.string().regex(/^[A-Z_]+$/).optional(), status: z.enum(CASE_STATUSES).optional(),
+  faskes: z.string().max(20).optional(), from: isoDate.optional(), to: isoDate.optional(), limit: z.coerce.number().int().min(1).max(2000).optional(),
+});
+const found = (c) => { if (!c) throw new HttpError(404, 'NOT_FOUND', 'Kasus tidak ditemukan'); return c; };
 
 app.post('/v1/analyze', auth, tap.middleware, asyncHandler(async (req, res) => {
   res.json(await engine.analyze(analyzeSchema.parse(req.body)));
 }));
 
-app.get('/v1/cases', auth, asyncHandler(async (req, res) => {
-  const status = req.query.status ? String(req.query.status) : null;
-  res.json({ items: await cases.find(status ? { eq: { status } } : {}, { orderBy: 'created_ms', dir: 'desc', limit: Math.min(Number(req.query.limit) || 100, 300) }) });
+app.get('/v1/cases', auth, asyncHandler(async (req, res) => res.json({ items: await engine.listCases(listSchema.parse(req.query)) })));
+app.get('/v1/cases/:id', auth, asyncHandler(async (req, res) => res.json(found(await engine.getCase(req.params.id)))));
+app.patch('/v1/cases/:id', auth, asyncHandler(async (req, res) => res.json(found(await engine.setStatus(req.params.id, statusSchema.parse(req.body))))));
+app.post('/v1/cases/:id/review', auth, asyncHandler(async (req, res) => res.json(found(await engine.review(req.params.id, reviewSchema.parse(req.body))))));
+app.post('/v1/cases/:id/explanation', auth, asyncHandler(async (req, res) => {
+  const { text, source } = explanationSchema.parse(req.body);
+  found(await cases.get(req.params.id));
+  res.json(await cases.update(req.params.id, { explanation: text, explanation_source: source, explained_ms: Date.now() }));
 }));
-app.get('/v1/cases/:id', auth, asyncHandler(async (req, res) => {
-  const c = await cases.get(req.params.id);
-  if (!c) throw new HttpError(404, 'NOT_FOUND', 'Kasus tidak ditemukan');
-  res.json(c);
-}));
-app.post('/v1/cases/:id/review', auth, asyncHandler(async (req, res) => {
-  const updated = await engine.review(req.params.id, reviewSchema.parse(req.body));
-  if (!updated) throw new HttpError(404, 'NOT_FOUND', 'Kasus tidak ditemukan');
-  res.json(updated);
+
+app.get('/v1/thresholds', auth, (req, res) => res.json(engine.getThresholds()));
+app.put('/v1/thresholds', auth, asyncHandler(async (req, res) => res.json(await engine.setThresholds(thresholdSchema.parse(req.body)))));
+app.get('/v1/scores', auth, asyncHandler(async (req, res) => {
+  const rows = await observations.find({}, { orderBy: 'created_ms', dir: 'desc', limit: Math.min(Number(req.query.limit) || 20000, 50000) });
+  res.json({ items: rows.filter((o) => o.result).map((o) => ({ claim_id: o.claim_id, fraud_ref: o.fraud_ref, facility_id: o.facility_id, claim_type: o.claim_type, score: o.result.risk_score, risk_level: o.result.risk_level, case_id: o.result.case_id })) });
 }));
 app.get('/v1/stats', auth, asyncHandler(async (req, res) => res.json(await engine.stats())));
 

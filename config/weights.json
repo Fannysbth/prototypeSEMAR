@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "cross_facility_hopping": 1,
+    "overlapping_stay": 1,
+    "identical_claim_fingerprint": 1,
+    "amount_vs_reference": 1,
+    "los_vs_reference": 1,
+    "split_episode": 1,
+    "duplicate_claim": 1
+  },
+  "ml_isolation_forest": 0.6,
+  "ml_supervised": 0.9,
+  "ml_supervised_min": 0.5
+}

@@ -17,7 +17,7 @@ const login = async (username, password) => (await api('/api/auth/login', { meth
 
 test.before(async () => {
   stack = await startStack({ quiet: true, env: {
-    STORE: 'memory', DEMO_MODE: 'true', SYNTHETIC_ONLY: 'true', NODE_ENV: 'test',
+    STORE: 'memory', ML_ENABLED: 'false', DEMO_MODE: 'true', SYNTHETIC_ONLY: 'true', NODE_ENV: 'test',
     JWT_SECRET: 'upl-jwt-secret'.padEnd(40, 'j'), HMAC_MASTER_KEY: 'upl-master-key'.padEnd(40, 'm'), INTERNAL_API_KEY: KEY,
     PORT: '5390', AUTH_PORT: '5391', PRIVACY_PORT: '5392', CLAIMS_PORT: '5393', FRAUD_PORT: '5394', NOTIFY_PORT: '5395',
     RATE_LIMIT_PER_MIN: '100000', LOGIN_MAX_FAILS_PER_MIN: '50', REIDENTIFY_MAX_PER_HOUR: '6',

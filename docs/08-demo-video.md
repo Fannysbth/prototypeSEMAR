@@ -4,7 +4,7 @@ Ketentuan: maks 10 menit, rekam Zoom, unggah YouTube Unlisted, pakai template pr
 
 ## Persiapan demo
 - `npm run demo:reset` : kosongkan DB, seed pengguna demo, generate data seed 42, latih model.
-- Akun demo: `faskes_rs12`, `verifikator_jkt`, `auditor_spi`, `admin_dpo` (kata sandi di `.env.example`).
+- Akun demo (tombol di halaman login): `rs.melati`, `verifikator`, `auditor`, `admin` (kata sandi `demo-<nama>`).
 - File unggah siap: `demo/fkrtl_batch_november.csv` berisi kasus cloning lintas 2 RS.
 - Rekam layar 1920×1080, zoom browser 125%, tab lain ditutup.
 - Rekam cadangan demo lebih dulu, jika live gagal pakai rekaman.

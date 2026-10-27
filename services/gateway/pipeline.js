@@ -7,12 +7,12 @@ import { performance } from 'node:perf_hooks';
 import { HttpError } from '../../shared/http.js';
 
 export function createPipeline({ config, clients, logger }) {
-  async function submitClaim({ claim, facility_id, mode, actor, idempotencyKey, requestId }) {
+  async function submitClaim({ claim, facility_id, mode, actor, idempotencyKey, requestId, claimId, allowDuplicate = false }) {
     const t0 = performance.now();
     const timings = {};
-    const claim_id = idempotencyKey
+    const claim_id = claimId ?? (idempotencyKey
       ? `CLM-${crypto.createHash('sha256').update(`${facility_id}|${idempotencyKey}`).digest('hex').slice(0, 12).toUpperCase()}`
-      : `CLM-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+      : `CLM-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`);
     const raw = { claim_id, facility_id, ...claim };
     const by = actor.sub;
 
@@ -34,7 +34,7 @@ export function createPipeline({ config, clients, logger }) {
     claimPayload.meta = { mode, submitted_by: by };
 
     const tc = performance.now();
-    await clients.claims.create(claimPayload, requestId);
+    try { await clients.claims.create(claimPayload, requestId); } catch (err) { if (!(allowDuplicate && err.code === 'DUPLICATE_CLAIM')) throw err; }
     timings.claims_ms = +(performance.now() - tc).toFixed(1);
 
     const tf = performance.now();
@@ -55,8 +55,8 @@ export function createPipeline({ config, clients, logger }) {
 
     timings.total_ms = +(performance.now() - t0).toFixed(1);
     return {
-      claim_id, mode, facility_id,
-      fraud: { risk_score: fraud.risk_score, risk_level: fraud.risk_level, ml_score: fraud.ml_score, flags: fraud.flags, case_id: fraud.case_id },
+      claim_id, mode, facility_id, subject_token: fraudPayload.fraud_ref,
+      fraud: { risk_score: fraud.risk_score, risk_level: fraud.risk_level, ml_score: fraud.ml_score, ml_status: fraud.ml_status, model_version: fraud.model_version, engine_version: fraud.engine_version, flags: fraud.flags, case_id: fraud.case_id },
       timings,
       ...(config.demoMode ? { visibility: { claims_received: claimPayload, fraud_received: fraudPayload } } : {}),
     };

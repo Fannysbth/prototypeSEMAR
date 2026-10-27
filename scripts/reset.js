@@ -20,6 +20,6 @@ if (process.argv.includes('--drop-schemas')) {
   const a = await rl.question('Ini akan MENGHAPUS schema samar_* di database Neon Anda. Ketik YA untuk lanjut: ');
   rl.close();
   if (a.trim() !== 'YA') { console.log('Dibatalkan.'); process.exit(0); }
-  await dropSchemas(config.store.databaseUrl, ['privacy', 'claims', 'fraud', 'notify']);
+  await dropSchemas(config.store.databaseUrl, ['privacy', 'claims', 'fraud', 'notify', 'gateway']);
   console.log('Schema samar_* dihapus.');
 }

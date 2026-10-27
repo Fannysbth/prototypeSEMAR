@@ -1,6 +1,7 @@
 // Menjalankan seluruh microservice sebagai proses terpisah (lintas OS, tanpa Docker/shell khusus).
 // Dipakai oleh `npm start` (scripts/dev.js) dan oleh skrip evaluasi/tes.
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { getConfig, ROOT } from '../shared/config.js';
 
@@ -12,6 +13,9 @@ const SERVICES = [
   { name: 'fraud', file: 'services/fraud/index.js' },
   { name: 'gateway', file: 'services/gateway/index.js' },
 ];
+
+// Layanan ml (Python/FastAPI) opsional: bila Python/dependensi tidak ada, sistem tetap jalan dengan detektor aturan.
+const pythonBin = () => ['Scripts/python.exe', 'bin/python'].map((p) => path.join(ROOT, 'services', 'ml', '.venv', p)).find((p) => fs.existsSync(p)) ?? (process.platform === 'win32' ? 'python' : 'python3');
 
 async function waitHealthy(url, child, name, timeoutMs) {
   const t0 = Date.now();
@@ -45,6 +49,14 @@ export async function startStack({ env = {}, quiet = false, timeoutMs = 90000, o
     return child;
   };
 
+  const launchMl = () => {
+    const child = spawn(pythonBin(), ['-m', 'uvicorn', 'app:app', '--host', '127.0.0.1', '--port', String(config.ports.ml), '--log-level', 'warning'], { cwd: path.join(ROOT, 'services', 'ml'), env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] });
+    child.on('error', () => {});
+    if (!quiet) { child.stdout.on('data', (d) => process.stdout.write(d)); child.stderr.on('data', (d) => process.stderr.write(d)); } else { child.stdout.resume(); child.stderr.resume(); }
+    children.push({ svc: { name: 'ml' }, child });
+    return child;
+  };
+
   const stop = async () => {
     stopping = true;
     await Promise.all(children.map(({ child }) => new Promise((resolve) => {
@@ -57,6 +69,10 @@ export async function startStack({ env = {}, quiet = false, timeoutMs = 90000, o
   };
 
   try {
+    if (config.mlEnabled) {
+      const ml = launchMl();
+      waitHealthy(`${config.urls.ml}/health`, ml, 'ml', 60000).catch(() => { if (!quiet) console.warn('[ml] tidak siap; deteksi berjalan dengan aturan saja (skor ML = 0, ditandai "ml tidak tersedia")'); });
+    }
     const backend = SERVICES.filter((s) => s.name !== 'gateway');
     await Promise.all(backend.map((svc) => waitHealthy(`${config.urls[svc.name]}/health`, launch(svc), svc.name, timeoutMs)));
     const gw = SERVICES.find((s) => s.name === 'gateway');

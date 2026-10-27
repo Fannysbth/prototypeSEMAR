@@ -42,8 +42,8 @@ app.post('/v1/login', auth, asyncHandler(async (req, res) => {
   const ok = checkPw(password, u ? u.hash : DUMMY) && !!u;
   if (!ok) throw new HttpError(401, 'INVALID_CREDENTIALS', 'Username atau password salah');
   const user = { sub: u.username, role: u.role, facility_id: u.facility_id || null, name: u.name };
-  const token = jwt.sign(user, config.secrets.JWT_SECRET, { algorithm: 'HS256', expiresIn: '2h' });
-  res.json({ token, user, expires_in: 7200 });
+  const token = jwt.sign(user, config.secrets.JWT_SECRET, { algorithm: 'HS256', expiresIn: config.jwtTtlSeconds });
+  res.json({ token, user, role: user.role, expires_in: config.jwtTtlSeconds });
 }));
 
 app.get('/v1/demo-users', auth, (req, res) => {

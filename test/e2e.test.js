@@ -24,7 +24,7 @@ test.before(async () => {
   stack = await startStack({ quiet: true, env: {
     STORE: PG ? 'postgres' : 'memory', ...(PG ? { DATABASE_URL: PG } : {}), DEMO_MODE: 'true', SYNTHETIC_ONLY: 'true', NODE_ENV: 'test',
     JWT_SECRET: 'e2e-jwt-secret'.padEnd(40, 'j'), HMAC_MASTER_KEY: 'e2e-master-key'.padEnd(40, 'm'), INTERNAL_API_KEY: KEY,
-    PORT: '5290', AUTH_PORT: '5291', PRIVACY_PORT: '5292', CLAIMS_PORT: '5293', FRAUD_PORT: '5294', NOTIFY_PORT: '5295',
+    ML_ENABLED: 'false', PORT: '5290', AUTH_PORT: '5291', PRIVACY_PORT: '5292', CLAIMS_PORT: '5293', FRAUD_PORT: '5294', NOTIFY_PORT: '5295',
     RATE_LIMIT_PER_MIN: '100000', LOGIN_MAX_FAILS_PER_MIN: '8', REIDENTIFY_MAX_PER_HOUR: '6',
     AUTH_USERS_JSON: '', ALLOWED_ORIGIN: '', TRUST_PROXY: '0', TOKEN_TTL_SECONDS: '2592000', HOST: '127.0.0.1', AUTH_URL: '', PRIVACY_URL: '', CLAIMS_URL: '', FRAUD_URL: '', NOTIFY_URL: '', LOG_LEVEL: 'error',
   } });
@@ -32,6 +32,8 @@ test.before(async () => {
   tokens.melati = await login('rs.melati', 'demo-melati');
   tokens.kenanga = await login('rs.kenanga', 'demo-kenanga');
   tokens.ver = await login('verifikator', 'demo-verifikator');
+  tokens.aud = await login('auditor', 'demo-auditor');
+  tokens.adm = await login('admin', 'demo-admin');
 });
 test.after(async () => { await stack?.stop(); });
 
@@ -105,13 +107,14 @@ test('human-in-the-loop: verifikator review kasus & membuka identitas (teraudit,
   const caseId = sim.json.steps[0].case_id;
   assert.ok(caseId);
   const rv = await api(`/api/cases/${caseId}/review`, { method: 'POST', token: tokens.ver, body: { decision: 'CONFIRMED_FRAUD', note: 'Nominal tidak sesuai dokumen' } });
-  assert.equal(rv.json.status, 'CONFIRMED');
-  assert.equal((await api(`/api/cases/${caseId}/reveal`, { method: 'POST', token: tokens.ver, body: { justification: 'pendek' } })).status, 400);
+  assert.equal(rv.json.status, 'TERKONFIRMASI');
+  assert.equal((await api(`/api/cases/${caseId}/reveal`, { method: 'POST', token: tokens.aud, body: { justification: 'pendek' } })).status, 400);
+  assert.equal((await api(`/api/cases/${caseId}/reveal`, { method: 'POST', token: tokens.ver, body: { justification: 'Verifikasi dokumen klaim ke fasilitas kesehatan terkait' } })).status, 403, 'verifikator tidak boleh membuka identitas');
   assert.equal((await api(`/api/cases/${caseId}/reveal`, { method: 'POST', token: tokens.melati, body: { justification: 'Saya ingin melihat identitas pasien ini' } })).status, 403);
-  const ok = await api(`/api/cases/${caseId}/reveal`, { method: 'POST', token: tokens.ver, body: { justification: 'Verifikasi dokumen klaim ke fasilitas kesehatan terkait' } });
+  const ok = await api(`/api/cases/${caseId}/reveal`, { method: 'POST', token: tokens.aud, body: { justification: 'Verifikasi dokumen klaim ke fasilitas kesehatan terkait' } });
   assert.equal(ok.status, 200); assert.match(ok.json.patient_nik, /^9999\d{12}$/); assert.equal(ok.json.protected, true);
-  const audit = (await api('/api/audit', { token: tokens.ver })).json.items;
-  assert.ok(audit.some((a) => a.action === 'REIDENTIFY' && a.status === 'SUCCESS' && a.actor === 'verifikator'));
+  const audit = (await api('/api/audit', { token: tokens.adm })).json.items;
+  assert.ok(audit.some((a) => a.action === 'REIDENTIFY' && a.status === 'SUCCESS' && a.actor === 'auditor'));
   assert.ok(!JSON.stringify(audit).includes(ok.json.patient_nik));
   tokens.lastCase = caseId;
 });
@@ -120,14 +123,15 @@ test('hak subjek: setelah revoke, identitas tidak bisa dibuka lagi', async () =>
   const nik = '9999888877776666';
   const sub = await api('/api/claims?mode=proposed', { method: 'POST', token: tokens.melati, body: { ...CLAIM, patient_nik: nik, amount: 18000000, length_of_stay: 4 } });
   const cid = sub.json.fraud.case_id; assert.ok(cid, 'upcoding harus membuat kasus');
-  assert.equal((await api('/api/subjects/revoke', { method: 'POST', token: tokens.ver, body: { patient_nik: nik } })).status, 200);
-  assert.equal((await api(`/api/cases/${cid}/reveal`, { method: 'POST', token: tokens.ver, body: { justification: 'Percobaan setelah subjek mencabut persetujuan' } })).status, 403);
+  assert.equal((await api('/api/subjects/revoke', { method: 'POST', token: tokens.ver, body: { patient_nik: nik } })).status, 403, 'revoke hanya admin');
+  assert.equal((await api('/api/subjects/revoke', { method: 'POST', token: tokens.adm, body: { patient_nik: nik } })).status, 200);
+  assert.equal((await api(`/api/cases/${cid}/reveal`, { method: 'POST', token: tokens.aud, body: { justification: 'Percobaan setelah subjek mencabut persetujuan' } })).status, 403);
 });
 
 test('kuota pembukaan identitas per verifikator dibatasi (429) - mencegah penyalahgunaan orang dalam', async () => {
   let got429 = false;
   for (let i = 0; i < 10 && !got429; i += 1) {
-    const r = await api(`/api/cases/${tokens.lastCase}/reveal`, { method: 'POST', token: tokens.ver, body: { justification: 'Verifikasi dokumen klaim ke fasilitas kesehatan terkait' } });
+    const r = await api(`/api/cases/${tokens.lastCase}/reveal`, { method: 'POST', token: tokens.aud, body: { justification: 'Verifikasi dokumen klaim ke fasilitas kesehatan terkait' } });
     got429 = r.status === 429;
   }
   assert.ok(got429);

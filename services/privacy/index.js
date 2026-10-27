@@ -10,9 +10,10 @@ import { POLICY } from './policy.js';
 const config = getConfig();
 const logger = createLogger('privacy', config.logLevel, config.isProd);
 const store = await createStore({ driver: config.store.driver, namespace: 'privacy', dataDir: config.store.dataDir, databaseUrl: config.store.databaseUrl, logger });
-const mappings = await store.collection('mappings', { indexes: ['subject_ref'] });
+const mappings = await store.collection('mappings', { indexes: ['subject_ref', 'group_ref'] });
+const meta = await store.collection('meta');
 const audit = await store.collection('audit', { indexes: ['action', 'actor'], numericIndexes: ['ts_ms'] });
-const core = createPrivacyCore({ mappings, audit, config, policy: POLICY });
+const core = createPrivacyCore({ mappings, audit, meta, config, policy: POLICY });
 
 const app = createBaseApp({ service: 'privacy', config });
 const auth = requireInternalKey(config);
@@ -39,7 +40,12 @@ const reidentifySchema = z.object({
   case_id: z.string().min(3).max(80),
   justification: z.string().trim().min(20, 'alasan minimal 20 karakter').max(500),
 });
-const revokeSchema = z.object({ subject_id: z.string().min(3).max(64), actor: z.object({ id: z.string().min(1).max(60) }) });
+const revokeSchema = z.object({ subject_id: z.string().min(3).max(64).optional(), pseudonym: z.string().regex(/^PSE_[A-Z]{3}_[0-9A-F]{20}$/).optional(), actor: z.object({ id: z.string().min(1).max(60) }) })
+  .refine((v) => v.subject_id || v.pseudonym, 'subject_id atau pseudonym wajib');
+const eventSchema = z.object({
+  action: z.enum(['CASE_STATUS', 'THRESHOLD_CHANGE']), actor: z.string().min(1).max(60), role: z.string().max(30),
+  target: z.string().max(80).optional(), reason: z.string().max(500).optional(),
+});
 
 app.post('/v1/minimize', auth, tap.middleware, asyncHandler(async (req, res) => {
   const { service, record, actor } = minimizeSchema.parse(req.body);
@@ -54,6 +60,10 @@ app.post('/v1/revoke', auth, asyncHandler(async (req, res) => {
   res.json(await core.revokeSubject({ ...revokeSchema.parse(req.body), now: nowOf(req) }));
 }));
 
+app.post('/v1/audit/event', auth, asyncHandler(async (req, res) => { await core.recordEvent(eventSchema.parse(req.body)); res.status(201).json({ recorded: true }); }));
+app.post('/v1/keys/rotate', auth, asyncHandler(async (req, res) => res.json(await core.rotateKeys({ actor: z.object({ id: z.string().min(1).max(60) }).parse(req.body.actor), now: nowOf(req) }))));
+app.post('/v1/screen', auth, asyncHandler(async (req, res) => res.json(await core.screenText(z.object({ text: z.string().max(20000) }).parse(req.body).text))));
+app.get('/v1/audit/verify', auth, asyncHandler(async (req, res) => res.json(await core.verifyAudit())));
 app.get('/v1/audit', auth, asyncHandler(async (req, res) => {
   res.json({ items: await core.listAudit(Math.min(Number(req.query.limit) || 100, 500)) });
 }));
