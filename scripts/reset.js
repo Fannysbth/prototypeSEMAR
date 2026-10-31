@@ -8,7 +8,8 @@ import { dropSchemas } from '../shared/store.js';
 const config = getConfig();
 if (fs.existsSync(config.store.dataDir)) {
   for (const f of fs.readdirSync(config.store.dataDir)) {
-    if (f === '.secrets.json') continue;
+    // Dataset Kaggle mentah dan hasil pemetaannya bukan data aplikasi dan tidak bisa dibuat ulang tanpa unduh manual.
+    if (f === '.secrets.json' || f === 'kaggle' || f === 'kaggle-mapped') continue;
     fs.rmSync(path.join(config.store.dataDir, f), { recursive: true, force: true });
   }
   console.log(`Data lokal dihapus: ${config.store.dataDir}`);
