@@ -1,5 +1,6 @@
 // npm run demo:reset : kosongkan data lokal (dan skema Postgres bila DATABASE_URL diisi), buat data sintetis seed 42
 // dan data latih model ml. Setelah ini: npm start (layanan ml melatih model dari data latih saat start).
+import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,4 +21,6 @@ if (config.store.driver === 'postgres') {
 run('generate-data/index.js', '--peserta', '5000', '--seed', '42');
 run('build-training-set.js');
 run('build-demo-batch.js');
+// Model Kaggle hanya dilatih bila hasil impor ada (npm run import-kaggle); tanpa itu layanan ml memakai model sintetis.
+if (fs.existsSync(path.join(dir, '..', 'data', 'kaggle-mapped', 'fkrtl.csv'))) run('ml-train.js');
 console.log('\nSiap. Jalankan npm start, lalu unggah demo/fkrtl_batch_november.csv (login faskes/verifikator).');

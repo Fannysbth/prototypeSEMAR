@@ -4,3 +4,7 @@ data/
 *.log
 .DS_Store
 services/ml/data/
+services/ml/models/
+docs/
+install.ps1
+reports.zip

@@ -58,6 +58,15 @@ app.post('/v1/cases/:id/explanation', auth, asyncHandler(async (req, res) => {
   res.json(await cases.update(req.params.id, { explanation: text, explanation_source: source, explained_ms: Date.now() }));
 }));
 
+// Umpan balik untuk latih ulang ml (zona token: hanya id faskes dan label). Satu faskes berlabel 1 bila ada kasusnya yang TERKONFIRMASI,
+// 0 bila hanya ada yang DITOLAK_FALSE_POSITIVE.
+app.get('/v1/feedback', auth, asyncHandler(async (req, res) => {
+  const byFaskes = new Map();
+  for (const status of ['TERKONFIRMASI', 'DITOLAK_FALSE_POSITIVE']) {
+    for (const c of await cases.find({ eq: { status } }, { limit: 5000 })) byFaskes.set(c.facility_id, Math.max(byFaskes.get(c.facility_id) ?? 0, status === 'TERKONFIRMASI' ? 1 : 0));
+  }
+  res.json({ items: [...byFaskes].map(([faskes_id, label]) => ({ faskes_id, label })) });
+}));
 app.get('/v1/thresholds', auth, (req, res) => res.json(engine.getThresholds()));
 app.put('/v1/thresholds', auth, asyncHandler(async (req, res) => res.json(await engine.setThresholds(thresholdSchema.parse(req.body)))));
 app.get('/v1/scores', auth, asyncHandler(async (req, res) => {

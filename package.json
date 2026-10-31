@@ -16,6 +16,8 @@
     "gen-secrets": "node scripts/gen-secrets.js",
     "generate-data": "node scripts/generate-data/index.js",
     "import-kaggle": "node scripts/import-kaggle/index.js",
+    "ml:train": "node scripts/ml-train.js",
+    "ml:test": "cd services/ml && python -m pytest -q tests",
     "demo:reset": "node scripts/demo-reset.js",
     "train-data": "node scripts/build-training-set.js",
     "readme": "node scripts/render-readme.js",

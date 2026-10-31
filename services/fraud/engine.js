@@ -174,10 +174,10 @@ export function createEngine({ observations, cases, events, settings, forest, ml
     await events?.put(crypto.randomUUID(), { case_id, actor, from_status, to_status, note: note ?? null, at_ms: now() });
   }
 
-  async function mlScores(feats) {
+  async function mlScores(feats, obs) {
     if (ml) {
       try {
-        const m = await ml.score(named(feats));
+        const m = await ml.score(named(feats), { subject_token: obs.fraud_ref, faskes_id: obs.facility_id });
         return { status: 'ok', if_score: m.if_score, sup_score: m.sup_score, model_version: m.model_version, top: m.top_features ?? [] };
       } catch { return { status: 'unavailable', if_score: 0, sup_score: 0, top: [] }; }
     }
@@ -199,7 +199,7 @@ export function createEngine({ observations, cases, events, settings, forest, ml
     }
     const feats = extractFeatures(obs, ctx);
     const features = named(feats);
-    const m = await mlScores(feats);
+    const m = await mlScores(feats, obs);
     flags.push(...mlFlags(m, features, th));
     const score = combineFlags(flags);
     const level = riskLevel(score, th);
@@ -214,7 +214,7 @@ export function createEngine({ observations, cases, events, settings, forest, ml
       await cases.put(id, {
         case_id: id, claim_id: obs.claim_id, facility_id: obs.facility_id, fraud_ref: obs.fraud_ref,
         facilities: [...new Set([obs.facility_id, ...ctx.sameRef.map((o) => o.facility_id)])].sort(),
-        diagnosis_code: obs.diagnosis_code, amount: obs.amount, admit_date: obs.admit_date, potensi_nilai_dipertanyakan: estimateExcess(obs, flags),
+        diagnosis_code: obs.diagnosis_code, procedure_code: obs.procedure_code, amount: obs.amount, admit_date: obs.admit_date, potensi_nilai_dipertanyakan: estimateExcess(obs, flags),
         risk_score: score, risk_level: level, modi: [...new Set(flags.map((f) => f.modus))], flags, features, ml_status: m.status,
         status: 'BARU', created_ms: obs.created_ms, updated_ms: obs.created_ms, reviews: [],
       });

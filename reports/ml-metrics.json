@@ -1,0 +1,29 @@
+{
+  "versi": "kaggle-20261031T175403",
+  "metode": "GroupKFold 5 lipatan per penyedia (penyedia uji tidak terlihat saat latih)",
+  "pr_auc": 0.5223,
+  "roc_auc": 0.9043,
+  "k_penyedia": 15,
+  "precision_at_k": 0.6,
+  "recall_at_k": 0.3214,
+  "prevalensi_label": 0.0933,
+  "n_penyedia_berlabel": 300,
+  "n_klaim": 31386,
+  "n_umpan_balik": 0,
+  "fitur_klaim": [
+    "n_faskes_30d",
+    "n_kunjungan_30d",
+    "overlap_inap_hari",
+    "same_diag_multi_faskes_14d",
+    "los_vs_median_drg",
+    "billed_vs_median_drg",
+    "n_prosedur",
+    "n_diag"
+  ],
+  "fitur_dilewati": {
+    "referral_loop": "dataset tidak memuat faskes perujuk",
+    "selisih_tagih_verifikasi": "FKL48 (nilai verifikasi) kosong",
+    "jarak_kab_kota_faskes": "lokasi penyedia tidak ada"
+  },
+  "catatan": "Label per penyedia (bukan per klaim); ICD-9; USD tahun 2009. Isolation Forest tanpa label dilatih pada semua klaim."
+}

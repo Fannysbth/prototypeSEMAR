@@ -10,7 +10,7 @@ import { ROOT } from '../shared/config.js';
 
 const KEY = 'v1-internal-key-'.padEnd(40, 'x');
 const py = ['Scripts/python.exe', 'bin/python'].map((p) => path.join(ROOT, 'services/ml/.venv', p)).find((p) => fs.existsSync(p)) ?? 'python';
-const mlDeps = spawnSync(py, ['-c', 'import sklearn, fastapi, uvicorn'], { stdio: 'ignore' }).status === 0;
+const mlDeps = spawnSync(py, ['-c', 'import sklearn, pandas, joblib, fastapi, uvicorn'], { stdio: 'ignore' }).status === 0;
 const reportsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'samar-reports-'));
 let stack; let base; let mlReady = false;
 const tok = {};

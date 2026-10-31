@@ -5,7 +5,7 @@ FROM python:3.12-slim
 WORKDIR /app
 COPY services/ml/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-COPY services/ml/app.py services/ml/models.py ./
+COPY services/ml/app.py services/ml/models.py services/ml/features.py services/ml/kaggle_model.py ./
 RUN useradd --system --no-create-home samar
 USER samar
 ENV ML_TRAIN_CSV=/app/data/train.csv
