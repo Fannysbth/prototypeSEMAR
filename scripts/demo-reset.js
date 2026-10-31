@@ -26,6 +26,8 @@ if (config.store.driver === 'postgres') {
 run('generate-data/index.js', '--peserta', '5000', '--seed', '42');
 run('build-training-set.js');
 run('build-demo-batch.js');
+// Antrian kasus awal yang bervariasi (skor, status, umur); batch November tetap diunggah langsung saat demo.
+run('seed-demo.js');
 // Model Kaggle hanya dilatih bila hasil impor ada (npm run import-kaggle); tanpa itu layanan ml memakai model sintetis.
 if (fs.existsSync(path.join(dir, '..', 'data', 'kaggle-mapped', 'fkrtl.csv'))) run('ml-train.js');
 console.log('\nSiap. Jalankan npm start, lalu unggah demo/fkrtl_batch_november.csv (login faskes/verifikator).');

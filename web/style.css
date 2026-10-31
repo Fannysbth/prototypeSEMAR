@@ -154,3 +154,5 @@ details.more { margin: var(--s3) 0; }
 details.more > summary { cursor: pointer; color: var(--muted); font-size: var(--fs-sm); }
 .stat b span { font-size: inherit; color: inherit; }
 .row { align-items: start; }
+.table-wrap th, .table-wrap td { padding: var(--s2) var(--s2); }
+td .badge.status { white-space: nowrap; }
