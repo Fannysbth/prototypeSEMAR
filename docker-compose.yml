@@ -7,6 +7,19 @@ services:
     environment: { POSTGRES_USER: samar, POSTGRES_PASSWORD: samar, POSTGRES_DB: samar }
     # Port db TIDAK dibuka ke host. Untuk npm start di host: docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d db
     volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U samar -d samar"]
+      interval: 3s
+      retries: 20
+  # Satu kali jalan: skema vault/analytics/audit, peran per zona, dan GRANT (db/migrations). Zona token tidak punya akses ke vault.
+  migrate:
+    build: .
+    command: ["node", "scripts/migrate.js"]
+    environment:
+      DATABASE_URL_ADMIN: postgresql://samar:samar@db:5432/samar
+      PRIVATE_DB_PASSWORD: ${PRIVATE_DB_PASSWORD:-ganti-sandi-zona-pribadi}
+      TOKEN_DB_PASSWORD: ${TOKEN_DB_PASSWORD:-ganti-sandi-zona-token}
+    depends_on: { db: { condition: service_healthy } }
   ml:
     build: { context: ., dockerfile: Dockerfile.ml }
     environment:
@@ -27,8 +40,17 @@ services:
       JWT_SECRET: ${JWT_SECRET:-ganti-jwt-secret-demo-minimal-32-karakter-xx}
       HMAC_MASTER_KEY: ${HMAC_MASTER_KEY:-ganti-master-key-demo-minimal-32-karakter}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-ganti-internal-key-demo-minimal-32-karakter}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://samar:samar@db:5432/samar}   # kosongkan manual untuk mode file
-    depends_on: [db, ml]
+      # URL per zona: privacy + gateway memakai peran samar_private (vault + audit); claims, fraud, notify memakai samar_token (analytics + audit insert).
+      STORE: postgres
+      DATABASE_URL: postgresql://samar_private:${PRIVATE_DB_PASSWORD:-ganti-sandi-zona-pribadi}@db:5432/samar
+      DATABASE_URL_PRIVACY: postgresql://samar_private:${PRIVATE_DB_PASSWORD:-ganti-sandi-zona-pribadi}@db:5432/samar
+      DATABASE_URL_GATEWAY: postgresql://samar_private:${PRIVATE_DB_PASSWORD:-ganti-sandi-zona-pribadi}@db:5432/samar
+      DATABASE_URL_CLAIMS: postgresql://samar_token:${TOKEN_DB_PASSWORD:-ganti-sandi-zona-token}@db:5432/samar
+      DATABASE_URL_FRAUD: postgresql://samar_token:${TOKEN_DB_PASSWORD:-ganti-sandi-zona-token}@db:5432/samar
+      DATABASE_URL_NOTIFY: postgresql://samar_token:${TOKEN_DB_PASSWORD:-ganti-sandi-zona-token}@db:5432/samar
+    depends_on:
+      ml: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
     volumes:
       - ./data:/app/data
 

@@ -12,7 +12,8 @@ const logger = createLogger('privacy', config.logLevel, config.isProd);
 const store = await createStore({ driver: config.store.driver, namespace: 'privacy', dataDir: config.store.dataDir, databaseUrl: config.store.databaseUrl, logger });
 const mappings = await store.collection('mappings', { indexes: ['subject_ref', 'group_ref'] });
 const meta = await store.collection('meta');
-const audit = await store.collection('audit', { indexes: ['action', 'actor'], numericIndexes: ['ts_ms'] });
+// Audit berantai hash: tabel audit.audit_log dibuat migrasi dan hanya bisa INSERT/SELECT dari peran layanan.
+const audit = await store.collection('audit', store.driver === 'postgres' ? { schema: 'audit', table: 'audit_log', managed: true, appendOnly: true } : { indexes: ['action', 'actor'], numericIndexes: ['ts_ms'] });
 const core = createPrivacyCore({ mappings, audit, meta, config, policy: POLICY });
 
 const app = createBaseApp({ service: 'privacy', config });

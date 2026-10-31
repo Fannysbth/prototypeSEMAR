@@ -1,6 +1,7 @@
 // Menjalankan seluruh microservice sebagai proses terpisah (lintas OS, tanpa Docker/shell khusus).
 // Dipakai oleh `npm start` (scripts/dev.js) dan oleh skrip evaluasi/tes.
 import { spawn } from 'node:child_process';
+import { resetDatabase } from './pg-env.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { getConfig, ROOT } from '../shared/config.js';
@@ -43,12 +44,17 @@ export function serviceEnv(name, env = process.env) {
   if (name !== 'gateway') delete out.LLM_API_KEY;
   const own = env[`DATABASE_URL_${name.toUpperCase()}`];
   for (const k of Object.keys(out)) if (k.startsWith('DATABASE_URL_')) delete out[k];
+  // Bila URL per zona dipakai, layanan tanpa URL sendiri (auth) tidak boleh mewarisi URL admin/umum.
   if (own) out.DATABASE_URL = own;
+  else if (Object.keys(env).some((k) => k.startsWith('DATABASE_URL_') && k !== 'DATABASE_URL_ADMIN')) { delete out.DATABASE_URL; out.STORE = 'memory'; } // auth tidak memakai DB
+  delete out.DATABASE_URL_ADMIN;
   out.SAMAR_SERVICE = name;
   return out;
 }
 
 export async function startStack({ env = {}, quiet = false, timeoutMs = 90000, onCrash } = {}) {
+  // SAMAR_TEST_PG=<URL admin>: jalankan di atas Postgres dengan peran per zona (DB dikosongkan tiap stack).
+  if (process.env.SAMAR_TEST_PG) env = { ...env, ...(await resetDatabase(process.env.SAMAR_TEST_PG)) };
   Object.assign(process.env, env);
   const config = getConfig();
   const children = [];

@@ -13,6 +13,11 @@ const run = (script, ...args) => {
   if (r.status !== 0) { console.error(`${script} gagal`); process.exit(r.status ?? 1); }
 };
 const config = getConfig();
+// Mode Postgres per zona (DATABASE_URL_ADMIN diisi): kosongkan DB, 4 akun demo, impor data, latih ML (lihat scripts/seed.js).
+if (process.env.DATABASE_URL_ADMIN) {
+  const r = spawnSync(process.execPath, [path.join(dir, 'seed.js'), '--reset', ...process.argv.slice(2)], { stdio: 'inherit' });
+  process.exit(r.status ?? 1);
+}
 run('reset.js');
 if (config.store.driver === 'postgres') {
   await dropSchemas(config.store.databaseUrl, ['privacy', 'claims', 'fraud', 'notify', 'gateway']);

@@ -155,6 +155,11 @@ async function withRetry(fn, tries = 5, delayMs = 1500) {
   throw last;
 }
 
+// Zona data (db/migrations/001_zones.sql): privacy dan gateway di vault, claims/fraud/notify di analytics.
+// Namespace lain (mis. tes) tetap memakai skema samar_<namespace>. Koleksi {schema, table, managed, appendOnly}
+// dibuat oleh migrasi dan hanya boleh INSERT lewat peran layanan (audit_log).
+export const ZONE_SCHEMA = { privacy: 'vault', gateway: 'vault', claims: 'analytics', fraud: 'analytics', notify: 'analytics' };
+
 async function createPostgresStore({ namespace, databaseUrl, logger }) {
   const { default: pg } = await import('pg');
   const needsSsl = /neon\.tech|sslmode=(require|verify)/.test(databaseUrl);
@@ -168,20 +173,25 @@ async function createPostgresStore({ namespace, databaseUrl, logger }) {
   pool.on('error', (e) => logger?.warn('pool error', { message: e.message }));
   // Neon bisa "tidur" saat idle; koneksi pertama kadang butuh beberapa detik -> retry.
   await withRetry(() => pool.query('SELECT 1'));
-  const schema = `samar_${assertName(namespace)}`;
-  await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
+  const zone = ZONE_SCHEMA[assertName(namespace)];
+  const schema = zone ?? `samar_${namespace}`;
+  if (!zone) await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`); // skema zona dibuat migrasi; peran layanan tidak boleh membuat skema
 
   return {
     driver: 'postgres',
-    async collection(name, { indexes = [], numericIndexes = [] } = {}) {
+    async collection(name, { indexes = [], numericIndexes = [], schema: onlySchema, table, managed = false, appendOnly = false } = {}) {
       assertName(name);
-      const tbl = `"${schema}"."${name}"`;
-      await pool.query(`CREATE TABLE IF NOT EXISTS ${tbl} (id text PRIMARY KEY, doc jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now())`);
-      for (const k of indexes) await pool.query(`CREATE INDEX IF NOT EXISTS "ix_${name}_${assertName(k)}" ON ${tbl} ((doc->>'${k}'))`);
-      for (const k of numericIndexes) await pool.query(`CREATE INDEX IF NOT EXISTS "ixn_${name}_${assertName(k)}" ON ${tbl} (((doc->>'${k}')::numeric))`);
+      const tname = table ?? (zone ? `${namespace}_${name}` : name);
+      const tbl = `"${onlySchema ?? schema}"."${assertName(tname)}"`;
+      if (!managed) {
+        await pool.query(`CREATE TABLE IF NOT EXISTS ${tbl} (id text PRIMARY KEY, doc jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now())`);
+        for (const k of indexes) await pool.query(`CREATE INDEX IF NOT EXISTS "ix_${tname}_${assertName(k)}" ON ${tbl} ((doc->>'${k}'))`);
+        for (const k of numericIndexes) await pool.query(`CREATE INDEX IF NOT EXISTS "ixn_${tname}_${assertName(k)}" ON ${tbl} (((doc->>'${k}')::numeric))`);
+      }
       const withId = (id, doc) => JSON.stringify({ ...doc, id });
       return {
         async put(id, doc) {
+          if (appendOnly) { await pool.query(`INSERT INTO ${tbl} (id, doc) VALUES ($1, $2::jsonb)`, [id, withId(id, doc)]); return; }
           await pool.query(`INSERT INTO ${tbl} (id, doc) VALUES ($1, $2::jsonb) ON CONFLICT (id) DO UPDATE SET doc = EXCLUDED.doc`, [id, withId(id, doc)]);
         },
         async insertIfAbsent(id, doc) {
@@ -229,6 +239,6 @@ export async function dropSchemas(databaseUrl, namespaces) {
   const { default: pg } = await import('pg');
   const pool = new pg.Pool({ connectionString: databaseUrl, max: 1, ...(/neon\.tech|sslmode=/.test(databaseUrl) ? { ssl: { rejectUnauthorized: true } } : {}) });
   try {
-    for (const ns of namespaces) await pool.query(`DROP SCHEMA IF EXISTS "samar_${assertName(ns)}" CASCADE`);
+    for (const ns of namespaces) await pool.query(`DROP SCHEMA IF EXISTS "${ZONE_SCHEMA[assertName(ns)] ?? `samar_${ns}`}" CASCADE`);
   } finally { await pool.end(); }
 }
