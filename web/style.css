@@ -117,3 +117,16 @@ ul.plain li { margin-bottom: var(--s1); }
   nav button { white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* linimasa riwayat token lintas faskes */
+.timeline { margin: var(--s3) 0 var(--s4); overflow-x: auto; }
+.tl-row { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: var(--s3); min-width: 520px; }
+.tl-label { font-size: var(--fs-sm); font-weight: 700; text-align: right; }
+.tl-track { position: relative; height: 34px; margin: 3px 0; background: var(--bg); border-radius: 6px; border: 1px solid var(--line); }
+.tl-block { position: absolute; top: 4px; height: 24px; border-radius: 5px; background: var(--brand-soft); border: 2px solid var(--brand); color: var(--brand-strong); font-size: 0.75rem; font-weight: 700; line-height: 20px; padding: 0 4px; overflow: hidden; white-space: nowrap; }
+.tl-block.overlap, .tl-key.overlap { background: repeating-linear-gradient(45deg, var(--risk-high-bg), var(--risk-high-bg) 5px, #f7c4c4 5px, #f7c4c4 10px); border-color: var(--risk-high); color: var(--risk-high); }
+.tl-block.current { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); z-index: 1; }
+.tl-axis { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); }
+.tl-legend { display: flex; gap: var(--s4); flex-wrap: wrap; margin-top: var(--s2); font-size: var(--fs-sm); color: var(--muted); }
+.tl-key { display: inline-block; width: 18px; height: 12px; border-radius: 3px; vertical-align: middle; background: var(--brand-soft); border: 2px solid var(--brand); }
+.tl-key.current { background: var(--surface); border-color: var(--text); }

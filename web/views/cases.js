@@ -1,5 +1,6 @@
 // Kasus: daftar dan detail. Verifikator menilai dari pola token; bila butuh bukti ia meminta berkas ke faskes, bila butuh identitas ia
 // mengeskalasi ke auditor. Hanya auditor yang punya aksi buka identitas.
+import { timeline } from './timeline.js';
 import { $, h, api, state, note, table, badge, statusBadge, rp, fmtTime, ago, navigate, loading, download, info, MODUS_RUMUS, NILAI_LABEL, NILAI_TIP } from '../lib.js';
 
 export const STATUSES = ['BARU', 'DITINJAU', 'BUTUH_INFO', 'MENUNGGU_FASKES', 'ESKALASI', 'TERKONFIRMASI', 'DITOLAK_FALSE_POSITIVE', 'SELESAI'];
@@ -59,7 +60,7 @@ async function viewDetail(id) {
         c.ml_status === 'unavailable' ? h('div', { class: 'msg err', role: 'alert' }, 'ML tidak tersedia: skor hanya dari detektor aturan.') : null,
         h('h3', {}, 'Alasan deteksi'), h('ul', { class: 'plain' }, c.flags.map((x) => h('li', {}, h('strong', {}, x.modus.replaceAll('_', ' ')), `: ${x.reason}`))),
         h('h3', {}, 'Cara nilai dipertanyakan dihitung'), h('ul', { class: 'plain' }, c.modi.map((m) => h('li', {}, MODUS_RUMUS[m] ?? m))),
-        h('h3', {}, 'Riwayat token lintas faskes'),
+        h('h3', {}, 'Riwayat token lintas faskes'), timeline(c.history, c.claim_id),
         table(['Klaim', 'Faskes', 'Masuk', 'Lama rawat', 'Diagnosis', 'Tarif'], c.history.map((x) => [h('span', { class: 'mono' }, x.claim_id), x.facility_id, x.admit_date, `${x.length_of_stay} hari`, x.diagnosis_code, rp(x.amount)]), { num: [5] }),
         h('h3', {}, 'Penjelasan ', src), expl, h('button', { class: 'link', type: 'button', onclick: explain }, 'Buat ulang penjelasan')),
     ];
