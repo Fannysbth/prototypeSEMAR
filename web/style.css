@@ -138,3 +138,10 @@ ul.plain li { margin-bottom: var(--s1); }
 td .link.mono { white-space: nowrap; }
 td .tags { flex-direction: column; align-items: flex-start; }
 th { vertical-align: bottom; white-space: normal; }
+
+/* kartu yang bisa dilipat (Evaluasi) */
+details.fold { padding: 0; }
+details.fold > summary { cursor: pointer; padding: var(--s4) var(--s5); font-size: var(--fs-lg); font-weight: 700; list-style-position: inside; }
+details.fold[open] > summary { border-bottom: 1px solid var(--line); }
+.fold-body { padding: var(--s4) var(--s5) var(--s5); }
+.stat .sub { display: block; margin-top: var(--s1); }

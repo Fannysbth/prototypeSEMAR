@@ -14,6 +14,20 @@ export function posisiBpjs() {
       h('li', {}, h('strong', {}, 'Batas: '), 'semua angka di halaman ini dari data sintetis; ini bukti mekanisme, bukan akurasi pada data JKN riil.')));
 }
 
+// Kartu detail dilipat agar halaman terbaca sekilas. Iframe (evidence card) baru dimuat saat dibuka: iframe di luar layar
+// pada kartu tertutup tidak digambar dengan benar oleh sebagian peramban, sehingga tampil kosong.
+function fold(card) {
+  if (card.tagName !== 'DIV' || !card.classList.contains('card') || card.firstElementChild?.tagName !== 'H2') return card;
+  const title = card.firstElementChild;
+  const d = h('details', { class: 'card fold' }, h('summary', {}, title.textContent));
+  title.remove();
+  d.append(h('div', { class: 'fold-body' }, ...card.childNodes));
+  d.addEventListener('toggle', () => { if (d.open) for (const f of d.querySelectorAll('iframe[data-src]')) { f.src = f.dataset.src; f.removeAttribute('data-src'); } });
+  return d;
+}
+
+const stat = (v, l, sub) => h('div', { class: 'stat' }, h('b', {}, v), h('span', {}, l), sub ? h('span', { class: 'sub' }, sub) : null);
+
 export async function viewEvaluasi() {
   const box = h('div'); loading(box);
   $('view').replaceChildren(h('h1', {}, 'Evaluasi'), box);
@@ -45,9 +59,18 @@ export async function viewEvaluasi() {
   const ev = m.evidence_card;
   parts.push(h('div', { class: 'card' }, h('h2', {}, 'Evidence card (eval-kit)'),
     ev.ran ? h('div', {}, ...['evidence.html', 'evidence-hard.html'].flatMap((f) => [h('h3', {}, f === 'evidence.html' ? 'Set standar' : 'Set hard'),
-      h('iframe', { src: `/api/v1/evaluation/evidence?file=${f}&access_token=${encodeURIComponent(state.token)}`, title: `Evidence card ${f === 'evidence.html' ? 'set standar' : 'set hard'}`, class: 'evidence', sandbox: 'allow-scripts' })]),
+      h('a', { href: `/api/v1/evaluation/evidence?file=${f}&access_token=${encodeURIComponent(state.token)}`, target: '_blank', rel: 'noopener' }, 'Buka di tab baru'),
+      h('iframe', { 'data-src': `/api/v1/evaluation/evidence?file=${f}&access_token=${encodeURIComponent(state.token)}`, title: `Evidence card ${f === 'evidence.html' ? 'set standar' : 'set hard'}`, class: 'evidence', sandbox: 'allow-scripts' })]),
       h('h3', {}, 'Temuan keterbatasan otomatis dari kit'), h('ul', { class: 'plain' }, (ev.limitations.length ? ev.limitations : ['(tidak ada butir)']).map((x) => h('li', {}, x))))
       : h('div', { class: 'msg err', role: 'alert' }, `Evidence card belum dibuat: ${ev.reason}`)));
   parts.push(posisiBpjs());
-  box.replaceChildren(...parts);
+  const hard = d.summary.hard.full; const std = d.summary.standard.full;
+  const ringkas = h('div', { class: 'card' }, h('h2', {}, 'Ringkasan (data sintetis)'),
+    h('div', { class: 'grid' },
+      stat(hard.pr_auc.mean.toFixed(3), 'PR-AUC, set hard', `set standar ${std.pr_auc.mean.toFixed(3)} (cenderung optimistis)`),
+      stat(pct(hard.precision_at_1pct.mean), 'precision@1% klaim, set hard', `set standar ${pct(std.precision_at_1pct.mean)}; kapasitas 1% adalah asumsi`),
+      stat(`${p.parity.pct.toFixed(1)}%`, 'paritas deteksi dengan vs tanpa SAMAR', `${p.parity.identical} dari ${p.parity.total} klaim identik`),
+      stat(`${pii.baseline.pct_with_pii.toFixed(0)}% → ${pii.proposed.pct_with_pii.toFixed(0)}%`, 'payload zona token yang memuat PII', 'tanpa SAMAR → dengan SAMAR')),
+    h('p', { class: 'muted' }, 'Angka dari data sintetis dengan label generator: bukti mekanisme, bukan akurasi pada data JKN riil. Rincian per varian, modus, dan evidence card ada di bagian yang bisa dibuka di bawah.'));
+  box.replaceChildren(ringkas, ...parts.map(fold));
 }
