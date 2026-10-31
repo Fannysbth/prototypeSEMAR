@@ -13,6 +13,15 @@ export function h(tag, attrs = {}, ...kids) {
   return el;
 }
 export const rp = (n) => `Rp${Math.round(Number(n) || 0).toLocaleString('id-ID')}`;
+// Angka besar dibaca sebagai "juta", "miliar", atau "triliun" agar tidak terpotong dan mudah dibandingkan.
+export const rpShort = (n) => {
+  const v = Number(n) || 0; const a = Math.abs(v);
+  const f = (x, u) => `Rp${x.toLocaleString('id-ID', { maximumFractionDigits: 1 })} ${u}`;
+  if (a >= 1e12) return f(v / 1e12, 'triliun');
+  if (a >= 1e9) return f(v / 1e9, 'miliar');
+  if (a >= 1e6) return f(v / 1e6, 'juta');
+  return rp(v);
+};
 export const fmtTime = (ms) => (ms ? new Date(ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-');
 export const pct = (x, d = 1) => (x === null || x === undefined ? '-' : `${(x * 100).toFixed(d)}%`);
 export const ago = (ms) => { const m = Math.max(0, Math.round((Date.now() - ms) / 60000)); return m < 60 ? `${m} menit` : m < 1440 ? `${Math.round(m / 60)} jam` : `${Math.round(m / 1440)} hari`; };

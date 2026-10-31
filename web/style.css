@@ -145,3 +145,12 @@ details.fold > summary { cursor: pointer; padding: var(--s4) var(--s5); font-siz
 details.fold[open] > summary { border-bottom: 1px solid var(--line); }
 .fold-body { padding: var(--s4) var(--s5) var(--s5); }
 .stat .sub { display: block; margin-top: var(--s1); }
+
+/* simulasi: angka besar tidak boleh terpotong */
+.grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.stat { min-width: 0; }
+.stat b { font-size: clamp(1.15rem, 2.2vw, var(--fs-xl)); }
+details.more { margin: var(--s3) 0; }
+details.more > summary { cursor: pointer; color: var(--muted); font-size: var(--fs-sm); }
+.stat b span { font-size: inherit; color: inherit; }
+.row { align-items: start; }
