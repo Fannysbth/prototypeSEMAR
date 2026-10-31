@@ -8,8 +8,10 @@ import { ROOT } from '../../shared/config.js';
 import { parseCsv } from '../../shared/csv.js';
 import { FACILITIES } from '../../shared/reference.js';
 import { HttpError } from '../../shared/http.js';
+import { kaggleRowToUpload } from './kaggle-adapter.js';
 
 const MAX_ROWS = 20000;
+const MAX_ROWS_KAGGLE = 40000; // subset demo 300 penyedia ~31 ribu klaim
 const MAX_ERRORS = 100;
 const CONCURRENCY = 16;
 const optional = new Set(['phone', 'procedure_code']);
@@ -56,11 +58,12 @@ export function viewBatch(b, role) {
   ] };
 }
 
-export function createUploader({ claimSchema, pipeline, batches, mode }) {
+export function createUploader({ claimSchema, kaggleSchema, pipeline, batches, mode }) {
   const knownFacility = new Set(FACILITIES.map((f) => f.id));
   const live = new Map(); // batch yang sedang diproses (polling membaca dari sini)
 
-  async function process(batch, rows, user, requestId) {
+  async function process(batch, rows, user, requestId, source) {
+    const schema = source === 'kaggle' ? kaggleSchema : claimSchema;
     const fail = (row, message) => { batch.rejected += 1; if (batch.errors.length < MAX_ERRORS) batch.errors.push({ row, message }); };
     let next = 0;
     const worker = async () => {
@@ -69,11 +72,11 @@ export function createUploader({ claimSchema, pipeline, batches, mode }) {
         const rowNo = i + 2;
         const raw = rows[i];
         const facility_id = user.facility_id ?? raw.facility_id?.trim();
-        if (!knownFacility.has(facility_id)) { fail(rowNo, 'facility_id tidak dikenal'); continue; }
+        if (source !== 'kaggle' && !knownFacility.has(facility_id)) { fail(rowNo, 'facility_id tidak dikenal'); continue; }
         if (user.facility_id && raw.facility_id?.trim() && raw.facility_id.trim() !== user.facility_id) { fail(rowNo, 'facility_id tidak sesuai akun'); continue; }
         const ref = raw.claim_ref?.trim();
         if (ref && !CLAIM_REF.test(ref)) { fail(rowNo, 'claim_ref (FKL02) tidak valid'); continue; }
-        const parsed = claimSchema.safeParse(rowToClaim(raw));
+        const parsed = schema.safeParse(rowToClaim(raw));
         if (!parsed.success) { fail(rowNo, parsed.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')); continue; }
         batch.validated += 1;
         const onStage = (stage, info = {}) => {
@@ -93,17 +96,19 @@ export function createUploader({ claimSchema, pipeline, batches, mode }) {
     live.delete(batch.batch_id);
   }
 
-  async function upload({ csv, user, requestId, async = false }) {
-    const rows = parseCsv(csv).map(normalizeRow);
+  async function upload({ csv, user, requestId, async = false, source }) {
+    if (source !== undefined && source !== 'kaggle') throw new HttpError(400, 'INVALID_SOURCE', 'source hanya boleh kaggle');
+    const rows = parseCsv(csv).map(source === 'kaggle' ? kaggleRowToUpload : normalizeRow);
     if (rows.length === 0) throw new HttpError(400, 'EMPTY_CSV', 'CSV kosong atau tanpa baris data');
-    if (rows.length > MAX_ROWS) throw new HttpError(413, 'TOO_MANY_ROWS', `Maksimal ${MAX_ROWS} baris per unggahan`);
+    const maxRows = source === 'kaggle' ? MAX_ROWS_KAGGLE : MAX_ROWS;
+    if (rows.length > maxRows) throw new HttpError(413, 'TOO_MANY_ROWS', `Maksimal ${maxRows} baris per unggahan`);
     const batch = {
       batch_id: `BTH-${crypto.randomUUID().slice(0, 8).toUpperCase()}`, uploaded_by: user.sub, status: 'DIPROSES', total: rows.length,
       validated: 0, tokenized: 0, analyzed: 0, cross_facility: 0, flagged: 0, cases: 0, accepted: 0, rejected: 0, errors: [],
       preview: rows.slice(0, 20).map(previewRow), created_ms: Date.now(),
     };
     live.set(batch.batch_id, batch);
-    const run = process(batch, rows, user, requestId).catch(async (err) => { batch.status = 'GAGAL'; batch.errors.push({ row: 0, message: err.code ?? 'gagal diproses' }); live.delete(batch.batch_id); await batches.put(batch.batch_id, batch); });
+    const run = process(batch, rows, user, requestId, source).catch(async (err) => { batch.status = 'GAGAL'; batch.errors.push({ row: 0, message: err.code ?? 'gagal diproses' }); live.delete(batch.batch_id); await batches.put(batch.batch_id, batch); });
     if (!async) await run;
     return batch;
   }

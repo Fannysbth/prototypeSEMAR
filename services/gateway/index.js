@@ -20,6 +20,7 @@ import { createPipeline, ensureMode } from './pipeline.js';
 import { buildClaimSchema, caseQuerySchema, loginSchema, reviewSchema, revealSchema, revokeSchema, statusSchema, thresholdSchema } from './schemas.js';
 import { runScenario, scenarioList } from './simulate.js';
 import { createUploader, viewBatch } from './upload.js';
+import { buildKaggleClaimSchema } from './kaggle-adapter.js';
 import { createExplainer } from './explain.js';
 import { createWorkflow, REPLY_PATH } from './workflow.js';
 import { createHome } from './home.js';
@@ -33,7 +34,7 @@ const pipeline = createPipeline({ config, clients, logger });
 const store = await createStore({ driver: config.store.driver, namespace: 'gateway', dataDir: config.store.dataDir, databaseUrl: config.store.databaseUrl, logger });
 const claimSchema = buildClaimSchema({ syntheticOnly: config.syntheticOnly });
 const verifySchema = buildVerifySchema({ syntheticOnly: config.syntheticOnly });
-const uploader = createUploader({ claimSchema, pipeline, batches: await store.collection('batches', { indexes: ['uploaded_by'], numericIndexes: ['created_ms'] }), mode: 'proposed' });
+const uploader = createUploader({ claimSchema, kaggleSchema: buildKaggleClaimSchema({ syntheticOnly: config.syntheticOnly }), pipeline, batches: await store.collection('batches', { indexes: ['uploaded_by'], numericIndexes: ['created_ms'] }), mode: 'proposed' });
 const workflow = createWorkflow({ clients, requests: await store.collection('file_requests', { indexes: ['facility_id', 'case_id'], numericIndexes: ['created_ms'] }) });
 const explainer = createExplainer({ llm: config.llm, screen: (text) => clients.privacy.screen(text) });
 const webDir = path.join(ROOT, 'web');
@@ -105,7 +106,7 @@ app.post('/api/claims', authenticate, requireRole('facility'), asyncHandler(asyn
 app.post('/api/claims/upload', authenticate, requireRole(...FACILITY_ROLES), express.text({ type: 'text/csv', limit: '20mb' }), asyncHandler(async (req, res) => {
   if (typeof req.body !== 'string') throw new HttpError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Kirim CSV dengan Content-Type: text/csv');
   const asyncMode = req.query.async === 'true';
-  const batch = await uploader.upload({ csv: req.body, user: req.user, requestId: req.id, async: asyncMode });
+  const batch = await uploader.upload({ csv: req.body, user: req.user, requestId: req.id, async: asyncMode, source: req.query.source });
   res.status(asyncMode ? 202 : 200).json(viewBatch(batch, req.user.role));
 }));
 app.get('/api/claims/batches/:id', authenticate, requireRole(...FACILITY_ROLES), asyncHandler(async (req, res) => {

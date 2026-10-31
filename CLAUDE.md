@@ -10,7 +10,7 @@ Proyek: SAMAR, sistem deteksi fraud klaim JKN lintas faskes di atas data terpseu
 - ML: `cd services/ml && pip install -r requirements.txt && uvicorn app:app --port 4106`
 
 ## Aturan wajib
-1. Tidak ada data riil atau data pribadi asli. Semua data dari generator sintetis (`scripts/generate-data`). Data sampel resmi BPJS tidak boleh masuk repo.
+1. Tidak ada data riil atau data pribadi asli. Sumber data yang boleh: generator sintetis (`scripts/generate-data`) dan dataset Kaggle publik di `data/kaggle/` (tidak di-commit; `BeneID` diperlakukan seperti PSTV01 dan wajib ditokenisasi lewat privacy). Data sampel resmi BPJS tidak boleh masuk repo.
 2. Data pribadi (NIK, nama, tanggal lahir lengkap, alamat) hanya boleh ada di gateway, privacy, dan vault. Layanan claims, fraud, ml, notify hanya menerima token. Tes `zone-leak` harus tetap lulus.
 3. LLM hanya menerima token, kode diagnosis, angka, dan alasan detektor. Jangan pernah kirim PII. Jika LLM gagal atau `LLM_API_KEY` kosong, pakai penjelasan templat aturan.
 4. Rahasia lewat `.env` saja. Jangan commit `.env`, kunci, atau token.

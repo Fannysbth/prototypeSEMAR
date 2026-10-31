@@ -15,6 +15,7 @@
     "reset:neon": "node scripts/reset.js --drop-schemas",
     "gen-secrets": "node scripts/gen-secrets.js",
     "generate-data": "node scripts/generate-data/index.js",
+    "import-kaggle": "node scripts/import-kaggle/index.js",
     "demo:reset": "node scripts/demo-reset.js",
     "train-data": "node scripts/build-training-set.js",
     "readme": "node scripts/render-readme.js",
