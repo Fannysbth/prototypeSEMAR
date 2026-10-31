@@ -156,6 +156,7 @@ app.post('/api/cases/:id/explain', authenticate, requireRole(...REVIEWERS), asyn
   const c = await clients.fraud.getCase(req.params.id);
   const r = await explainer.explain(c);
   await clients.fraud.setExplanation(c.case_id, { text: r.text, source: r.source });
+  if (r.pii_blocked) await clients.privacy.event({ action: 'LLM_PII_BLOCKED', actor: req.user.sub, role: req.user.role, target: c.case_id, reason: String(r.note).slice(0, 200) }, req.id);
   res.json({ case_id: c.case_id, explanation: r.text, explanation_source: r.source, ...(r.note ? { note: r.note } : {}) });
 }));
 // ---------- alur tanpa membuka identitas: minta berkas ke faskes, balasan faskes, eskalasi ----------

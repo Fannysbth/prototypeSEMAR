@@ -43,8 +43,10 @@ async function viewDetail(id) {
   try {
     const [c, fr] = await Promise.all([api(`/cases/${encodeURIComponent(id)}`), api(`/file-requests?case_id=${encodeURIComponent(id)}`).catch(() => ({ items: [] }))]);
     const role = state.user.role;
-    const expl = h('p', {}, c.explanation || 'Membuat penjelasan...'); const src = h('span', { class: 'badge status' }, c.explanation_source || '-');
-    if (!c.explanation) api(`/cases/${encodeURIComponent(id)}/explain`, { method: 'POST', body: {} }).then((r) => { expl.textContent = r.explanation; src.textContent = r.explanation_source; }).catch((e) => { expl.textContent = e.message; });
+    const SRC = { llm: 'LLM', template: 'Templat aturan' };
+    const expl = h('p', {}, c.explanation || 'Membuat penjelasan...'); const src = h('span', { class: 'badge status' }, SRC[c.explanation_source] || '-');
+    const explain = () => { expl.textContent = 'Membuat penjelasan...'; return api(`/cases/${encodeURIComponent(id)}/explain`, { method: 'POST', body: {} }).then((r) => { expl.textContent = r.explanation; src.textContent = SRC[r.explanation_source] ?? r.explanation_source; }).catch((e) => { expl.textContent = e.message; }); };
+    if (!c.explanation) explain();
     const msg = h('div', { 'aria-live': 'polite' });
     const refresh = () => viewDetail(id);
     const run = (fn) => async () => { try { await fn(); } catch (e) { note(msg, e.message); } };
@@ -59,7 +61,7 @@ async function viewDetail(id) {
         h('h3', {}, 'Cara nilai dipertanyakan dihitung'), h('ul', { class: 'plain' }, c.modi.map((m) => h('li', {}, MODUS_RUMUS[m] ?? m))),
         h('h3', {}, 'Riwayat token lintas faskes'),
         table(['Klaim', 'Faskes', 'Masuk', 'Lama rawat', 'Diagnosis', 'Tarif'], c.history.map((x) => [h('span', { class: 'mono' }, x.claim_id), x.facility_id, x.admit_date, `${x.length_of_stay} hari`, x.diagnosis_code, rp(x.amount)]), { num: [5] }),
-        h('h3', {}, 'Penjelasan ', src), expl),
+        h('h3', {}, 'Penjelasan ', src), expl, h('button', { class: 'link', type: 'button', onclick: explain }, 'Buat ulang penjelasan')),
     ];
     if (['verifier', 'auditor'].includes(role)) {
       const status = h('select', { id: 'st' }, STATUSES.map((s) => h('option', { value: s, selected: s === c.status }, s.replaceAll('_', ' ')))); const nt = h('input', { id: 'st-note', placeholder: 'Catatan perubahan' });

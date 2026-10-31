@@ -20,6 +20,8 @@ export function ageBand(birthDate, nowMs = Date.now()) {
 
 // Dibatasi karakter non-alfanumerik agar potongan angka di dalam token heksadesimal tidak dianggap NIK/telepon.
 const RE_NIK = /(?<![A-Za-z0-9])\d{16}(?![A-Za-z0-9])/;
+// BeneID dataset Kaggle diperlakukan seperti PSTV01: tidak boleh muncul mentah di zona token atau di teks untuk LLM.
+const RE_BENEID = /(?<![A-Za-z0-9])BENE\d{3,}(?![A-Za-z0-9])/;
 const RE_PHONE = /(?<![A-Za-z0-9])(\+62|0)8\d{7,12}(?![A-Za-z0-9])/;
 
 // Memindai payload & mengembalikan kategori PII ASLI yang terlihat.
@@ -34,6 +36,7 @@ export function scanForPii(payload, knownPii = new Map()) {
     if (knownPii.has(s)) found.add(knownPii.get(s));
     if (RE_NIK.test(s)) found.add('nik');
     if (RE_PHONE.test(s)) found.add('phone');
+    if (RE_BENEID.test(s)) found.add('beneid');
   };
   walk(payload);
   return [...found].sort();
