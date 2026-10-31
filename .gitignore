@@ -8,3 +8,5 @@ services/ml/models/
 docs/
 install.ps1
 reports.zip
+docs/
+CLAUDE.MD
