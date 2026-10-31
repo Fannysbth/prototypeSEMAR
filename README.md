@@ -87,7 +87,7 @@ Sumber: `reports/metrics.json` (dibuat 2026-10-31 oleh `npm run evaluate`). 3 se
 - Ablasi: baris "Tanpa fitur lintas faskes", "Tanpa ML", dan "Tanpa aturan" membandingkan kontribusi tiap komponen terhadap SAMAR lengkap.
 - Modus hold-out REPEAT_BILLING (tidak dipakai melatih model supervised), recall pada ambang kasus: SAMAR lengkap 100.0% (n=27, CI95 87.5%-100.0%) (standar) dan 100.0% (n=37, CI95 90.6%-100.0%) (hard); **ML saja** 0.0% (n=27, CI95 0.0%-12.5%) (standar) dan 0.0% (n=37, CI95 0.0%-9.4%) (hard).
 - Paritas deteksi baseline vs SAMAR: 387/387 klaim identik (100.0%). Payload di zona token yang memuat data pribadi: 100% menjadi 0%.
-- Latensi POST /verify p95 18.3 ms; throughput unggah CSV 43.7 baris/detik (satu mesin, penyimpanan memori).
+- Latensi POST /verify p95 22.3 ms; throughput unggah CSV 29 baris/detik (satu mesin, penyimpanan memori).
 - Keamanan: 23/23 percobaan akses tidak sah ditolak; fungsional 9/9 lulus.
 - Evidence card eval-kit: `reports/evidence.html` dan `reports/evidence-hard.html` (6 butir keterbatasan otomatis dari kit, lihat `reports/evaluation.md`).
 

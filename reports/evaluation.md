@@ -1,6 +1,6 @@
 # Laporan Evaluasi SAMAR
 
-Dibuat 2026-10-31T11:26:56.703Z · Node v24.12.0 · win32 x64 · 16 CPU. Seluruh angka di berkas ini berasal dari `reports/metrics.json` (keluaran `npm run evaluate`).
+Dibuat 2026-10-31T13:15:01.601Z · Node v24.12.0 · win32 x64 · 16 CPU. Seluruh angka di berkas ini berasal dari `reports/metrics.json` (keluaran `npm run evaluate`).
 
 ## Batas yang harus dibaca lebih dulu
 - Seluruh data sintetis. Label berasal dari generator, bukan hasil audit BPJS. Angka membuktikan mekanisme, bukan akurasi pada data JKN riil.
@@ -132,11 +132,11 @@ Total payload mengandung PII di zona token: **100% (baseline) menjadi 0% (SAMAR)
 ## 8. Kinerja
 | Mode | Rata-rata | p50 | p95 | p99 | Throughput | Error |
 |---|---|---|---|---|---|---|
-| baseline | 13.8 ms | 12.9 ms | 18.6 ms | 20.1 ms | 85.2 TPS | 0 |
-| proposed | 15.6 ms | 15.1 ms | 21.5 ms | 24 ms | 114.4 TPS | 0 |
+| baseline | 19.1 ms | 18.3 ms | 24.7 ms | 27.1 ms | 65.3 TPS | 0 |
+| proposed | 19.6 ms | 19.1 ms | 23.2 ms | 25.1 ms | 68.5 TPS | 0 |
 
-- Latensi POST /verify (SAMAR, 120 permintaan berurutan): p50 12.2 ms, **p95 18.3 ms**, maks 25.8 ms.
-- Throughput unggah CSV: 1000 baris dalam 22.9 detik = **43.7 baris/detik**.
+- Latensi POST /verify (SAMAR, 120 permintaan berurutan): p50 16.7 ms, **p95 22.3 ms**, maks 33.9 ms.
+- Throughput unggah CSV: 1000 baris dalam 34.45 detik = **29 baris/detik**.
 - Satu mesin, penyimpanan memori, layanan ml aktif. Latensi absolut dengan Postgres lewat jaringan lebih tinggi.
 
 ## 9. Keamanan: 23/23 percobaan tidak sah ditolak

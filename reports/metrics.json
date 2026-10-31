@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-31T11:26:56.703Z",
+  "generated_at": "2026-10-31T13:15:01.601Z",
   "node": "v24.12.0",
   "platform": "win32 x64 · 16 CPU",
   "protocol": {
@@ -9605,42 +9605,42 @@
       "baseline": {
         "n": 150,
         "concurrency": 8,
-        "mean_ms": 13.8,
-        "p50_ms": 12.9,
-        "p95_ms": 18.6,
-        "p99_ms": 20.1,
-        "tps": 85.2,
+        "mean_ms": 19.1,
+        "p50_ms": 18.3,
+        "p95_ms": 24.7,
+        "p99_ms": 27.1,
+        "tps": 65.3,
         "errors": 0
       },
       "proposed": {
         "n": 150,
         "concurrency": 8,
-        "mean_ms": 15.6,
-        "p50_ms": 15.1,
-        "p95_ms": 21.5,
-        "p99_ms": 24,
-        "tps": 114.4,
+        "mean_ms": 19.6,
+        "p50_ms": 19.1,
+        "p95_ms": 23.2,
+        "p99_ms": 25.1,
+        "tps": 68.5,
         "errors": 0
       },
       "overhead": {
-        "p95_abs_ms": 2.9,
-        "mean_pct": 13,
-        "p95_pct": 15.6,
-        "tps_pct": 34.3
+        "p95_abs_ms": -1.5,
+        "mean_pct": 2.6,
+        "p95_pct": -6.1,
+        "tps_pct": 4.9
       },
       "note": "Satu mesin, penyimpanan memori, layanan ml aktif. Latensi absolut dengan Postgres lewat jaringan lebih tinggi."
     },
     "verify": {
       "n": 120,
-      "p50_ms": 12.2,
-      "p95_ms": 18.3,
-      "max_ms": 25.8
+      "p50_ms": 16.7,
+      "p95_ms": 22.3,
+      "max_ms": 33.9
     },
     "upload": {
       "rows": 1000,
       "accepted": 1000,
-      "seconds": 22.9,
-      "rows_per_sec": 43.7
+      "seconds": 34.45,
+      "rows_per_sec": 29
     },
     "security": {
       "total": 23,
@@ -9946,7 +9946,7 @@
       "roc_auc": 0.5
     },
     "n_klaim": 31386,
-    "versi_model": "kaggle-20261031T175403",
+    "versi_model": "kaggle-20261031T200653",
     "fitur_dilewati": {
       "referral_loop": "dataset tidak memuat faskes perujuk",
       "selisih_tagih_verifikasi": "FKL48 (nilai verifikasi) kosong",
@@ -9975,5 +9975,5 @@
       "evidence-hard.html"
     ]
   },
-  "duration_seconds": 270
+  "duration_seconds": 334
 }
