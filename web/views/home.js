@@ -1,5 +1,5 @@
 // Beranda per peran. Faskes: riwayat unggahan dan kualitas data. Verifikator: antrian. Auditor: eskalasi. Admin: kesehatan sistem.
-import { $, h, api, state, note, table, badge, statusBadge, rp, fmtTime, ago, navigate, loading, info } from '../lib.js';
+import { $, h, api, state, note, table, badge, statusBadge, modusCell, sinyalCell, labelOf, rp, fmtTime, ago, navigate, loading, info } from '../lib.js';
 
 const stat = (v, l) => h('div', { class: 'stat' }, h('b', {}, v), h('span', {}, l));
 const open = (hash, text) => h('button', { class: 'link', type: 'button', onclick: () => navigate(hash) }, text);
@@ -8,7 +8,7 @@ const bars = (title, obj, tip) => {
   const rows = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
   return h('div', {}, h('h3', {}, title, tip ? info(tip) : null), rows.length ? rows.map(([k, v]) => {
     const fill = h('div', { class: 'bar-fill' }); fill.style.width = `${(100 * v) / max}%`;
-    return h('div', { class: 'bar-row' }, h('div', {}, `${k.replaceAll('_', ' ')} (${v})`), h('div', { class: 'bar-track', role: 'img', 'aria-label': `${k}: ${v}` }, fill));
+    return h('div', { class: 'bar-row' }, h('div', {}, `${labelOf(k)} (${v})`), h('div', { class: 'bar-track', role: 'img', 'aria-label': `${k}: ${v}` }, fill));
   }) : h('p', { class: 'muted' }, 'Belum ada data.'));
 };
 
@@ -25,7 +25,7 @@ function facility(d) {
   ];
 }
 
-const caseTable = (items) => table(['Kasus', 'Risiko', 'Skor', 'Modus', 'Faskes', 'Status', 'Umur'], items.map((c) => [open(`#kasus/${c.case_id}`, c.case_id), badge(c.risk_level), c.risk_score, c.modi.join(', ').replaceAll('_', ' '), c.facilities.join(', '), statusBadge(c.status), ago(c.created_ms)]), { num: [2] });
+const caseTable = (items) => table(['Kasus', 'Risiko', 'Skor', 'Modus', 'Sinyal', 'Faskes', 'Status', 'Umur'], items.map((c) => [open(`#kasus/${c.case_id}`, c.case_id), badge(c.risk_level), c.risk_score, modusCell(c), sinyalCell(c), c.facilities.join(', '), statusBadge(c.status), ago(c.created_ms)]), { num: [2] });
 
 function verifier(d) {
   return [

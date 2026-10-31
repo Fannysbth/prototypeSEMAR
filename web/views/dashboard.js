@@ -1,12 +1,12 @@
 // Dashboard ringkasan dan simulasi dampak. Simulasi selalu berlabel asumsi; angka kasus adalah estimasi, bukan kerugian.
-import { $, h, api, state, note, rp, download, info, NILAI_LABEL, NILAI_TIP } from '../lib.js';
+import { $, h, api, state, note, rp, download, info, labelOf, NILAI_LABEL, NILAI_TIP } from '../lib.js';
 
 const stat = (v, l, tip) => h('div', { class: 'stat' }, h('b', {}, v), h('span', {}, l, tip ? info(tip) : null));
 function bars(title, obj) {
   const max = Math.max(1, ...Object.values(obj || {}));
   return h('div', {}, h('h3', {}, title), Object.entries(obj || {}).sort((a, b) => b[1] - a[1]).map(([k, v]) => {
     const fill = h('div', { class: 'bar-fill' }); fill.style.width = `${(100 * v) / max}%`;
-    return h('div', { class: 'bar-row' }, h('div', {}, `${k.replaceAll('_', ' ')} (${v})`), h('div', { class: 'bar-track', role: 'img', 'aria-label': `${k}: ${v}` }, fill));
+    return h('div', { class: 'bar-row' }, h('div', {}, `${labelOf(k)} (${v})`), h('div', { class: 'bar-track', role: 'img', 'aria-label': `${k}: ${v}` }, fill));
   }));
 }
 const SIM_LABEL = {

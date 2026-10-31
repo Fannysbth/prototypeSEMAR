@@ -1,7 +1,7 @@
 // Kasus: daftar dan detail. Verifikator menilai dari pola token; bila butuh bukti ia meminta berkas ke faskes, bila butuh identitas ia
 // mengeskalasi ke auditor. Hanya auditor yang punya aksi buka identitas.
 import { timeline } from './timeline.js';
-import { $, h, api, state, note, table, badge, statusBadge, rp, fmtTime, ago, navigate, loading, download, info, MODUS_RUMUS, NILAI_LABEL, NILAI_TIP } from '../lib.js';
+import { $, h, api, state, note, table, badge, statusBadge, modusCell, sinyalCell, sumberBadge, labelOf, rp, fmtTime, ago, navigate, loading, download, info, MODUS_RUMUS, NILAI_LABEL, NILAI_TIP } from '../lib.js';
 
 export const STATUSES = ['BARU', 'DITINJAU', 'BUTUH_INFO', 'MENUNGGU_FASKES', 'ESKALASI', 'TERKONFIRMASI', 'DITOLAK_FALSE_POSITIVE', 'SELESAI'];
 const MODI = ['SELF_REFERRAL', 'PHANTOM_BILLING', 'CLONING', 'UPCODING', 'UNBUNDLING', 'REPEAT_BILLING', 'PROLONGED_LOS', 'ML_ANOMALY', 'ML_SUPERVISED'];
@@ -9,19 +9,19 @@ const MODI = ['SELF_REFERRAL', 'PHANTOM_BILLING', 'CLONING', 'UPCODING', 'UNBUND
 async function viewDaftar() {
   const f = { risk: '', status: '', modus: '', faskes: '' };
   const list = h('div', { 'aria-live': 'polite' });
-  const sel = (key, label, opts) => { const el = h('select', { id: `c-${key}`, onchange: (e) => { f[key] = e.target.value; load(); } }, h('option', { value: '' }, 'Semua'), opts.map((o) => h('option', { value: o }, o.replaceAll('_', ' ')))); return h('div', {}, h('label', { for: `c-${key}` }, label), el); };
+  const sel = (key, label, opts) => { const el = h('select', { id: `c-${key}`, onchange: (e) => { f[key] = e.target.value; load(); } }, h('option', { value: '' }, 'Semua'), opts.map((o) => h('option', { value: o }, labelOf(o)))); return h('div', {}, h('label', { for: `c-${key}` }, label), el); };
   async function load() {
     loading(list);
     const q = new URLSearchParams(Object.entries(f).filter(([, v]) => v)).toString();
     try {
       const { items: found } = await api(`/cases${q ? `?${q}` : ''}`);
       const items = [...found].sort((a, b) => b.risk_score - a.risk_score || b.created_ms - a.created_ms);
-      list.replaceChildren(items.length ? table(['Kasus', 'Risiko', 'Skor', 'Modus', 'Faskes', 'Status', 'Tarif', [NILAI_LABEL, info(NILAI_TIP)], 'Umur'],
-        items.map((c) => ({ attrs: { class: 'click', onclick: () => navigate(`#kasus/${c.case_id}`) }, cells: [h('button', { class: 'link mono', type: 'button', onclick: (e) => { e.stopPropagation(); navigate(`#kasus/${c.case_id}`); } }, c.case_id), badge(c.risk_level), c.risk_score, c.modi.join(', ').replaceAll('_', ' '), c.facilities.join(', '), statusBadge(c.status), rp(c.amount), rp(c.potensi_nilai_dipertanyakan), ago(c.created_ms)] })), { num: [2, 6, 7] })
+      list.replaceChildren(items.length ? table(['Kasus', 'Risiko', 'Skor', 'Modus', 'Sinyal', 'Faskes', 'Status', 'Tarif', [NILAI_LABEL, info(NILAI_TIP)], 'Penjelasan', 'Umur'],
+        items.map((c) => ({ attrs: { class: 'click', onclick: () => navigate(`#kasus/${c.case_id}`) }, cells: [h('button', { class: 'link mono', type: 'button', onclick: (e) => { e.stopPropagation(); navigate(`#kasus/${c.case_id}`); } }, c.case_id), badge(c.risk_level), c.risk_score, modusCell(c), sinyalCell(c), c.facilities.join(', '), statusBadge(c.status), rp(c.amount), rp(c.potensi_nilai_dipertanyakan), c.explanation_source ? sumberBadge(c.explanation_source) : '-', ago(c.created_ms)] })), { num: [2, 7, 8] })
         : h('p', { class: 'muted' }, 'Belum ada kasus untuk filter ini. Unggah CSV terlebih dahulu.'));
     } catch (e) { note(list, e.message); }
   }
-  $('view').replaceChildren(h('h1', {}, 'Antrian kasus berisiko'), h('div', { class: 'card' }, h('div', { class: 'row' }, sel('risk', 'Risiko', ['HIGH', 'MEDIUM', 'LOW']), sel('status', 'Status', STATUSES), sel('modus', 'Modus', MODI), sel('faskes', 'Faskes', (state.config?.facilities ?? []).map((x) => x.id))), list));
+  $('view').replaceChildren(h('h1', {}, 'Antrian kasus berisiko'), h('div', { class: 'card' }, h('div', { class: 'row' }, sel('risk', 'Risiko', ['HIGH', 'MEDIUM', 'LOW']), sel('status', 'Status', STATUSES), sel('modus', 'Modus / sinyal', MODI), sel('faskes', 'Faskes', (state.config?.facilities ?? []).map((x) => x.id))), list));
   load();
 }
 
@@ -44,9 +44,8 @@ async function viewDetail(id) {
   try {
     const [c, fr] = await Promise.all([api(`/cases/${encodeURIComponent(id)}`), api(`/file-requests?case_id=${encodeURIComponent(id)}`).catch(() => ({ items: [] }))]);
     const role = state.user.role;
-    const SRC = { llm: 'LLM', template: 'Templat aturan' };
-    const expl = h('p', {}, c.explanation || 'Membuat penjelasan...'); const src = h('span', { class: 'badge status' }, SRC[c.explanation_source] || '-');
-    const explain = () => { expl.textContent = 'Membuat penjelasan...'; return api(`/cases/${encodeURIComponent(id)}/explain`, { method: 'POST', body: {} }).then((r) => { expl.textContent = r.explanation; src.textContent = SRC[r.explanation_source] ?? r.explanation_source; }).catch((e) => { expl.textContent = e.message; }); };
+    const expl = h('p', {}, c.explanation || 'Membuat penjelasan...'); const src = h('span', {}, sumberBadge(c.explanation_source));
+    const explain = () => { expl.textContent = 'Membuat penjelasan...'; return api(`/cases/${encodeURIComponent(id)}/explain`, { method: 'POST', body: {} }).then((r) => { expl.textContent = r.explanation; src.replaceChildren(sumberBadge(r.explanation_source)); }).catch((e) => { expl.textContent = e.message; }); };
     if (!c.explanation) explain();
     const msg = h('div', { 'aria-live': 'polite' });
     const refresh = () => viewDetail(id);
@@ -58,7 +57,7 @@ async function viewDetail(id) {
         h('div', { class: 'grid' }, h('div', { class: 'stat' }, h('b', {}, rp(c.potensi_nilai_dipertanyakan)), h('span', {}, NILAI_LABEL, info(NILAI_TIP)))),
         h('p', { class: 'muted' }, 'Token pasien: ', h('span', { class: 'mono' }, c.fraud_ref)),
         c.ml_status === 'unavailable' ? h('div', { class: 'msg err', role: 'alert' }, 'ML tidak tersedia: skor hanya dari detektor aturan.') : null,
-        h('h3', {}, 'Alasan deteksi'), h('ul', { class: 'plain' }, c.flags.map((x) => h('li', {}, h('strong', {}, x.modus.replaceAll('_', ' ')), `: ${x.reason}`))),
+        h('h3', {}, 'Alasan deteksi'), h('ul', { class: 'plain' }, c.flags.map((x) => h('li', {}, h('strong', {}, labelOf(x.modus)), ' ', h('span', { class: 'tag' }, x.modus.startsWith('ML_') ? 'ML' : 'Aturan'), `: ${x.reason}`))),
         h('h3', {}, 'Cara nilai dipertanyakan dihitung'), h('ul', { class: 'plain' }, c.modi.map((m) => h('li', {}, MODUS_RUMUS[m] ?? m))),
         h('h3', {}, 'Riwayat token lintas faskes'), timeline(c.history, c.claim_id),
         table(['Klaim', 'Faskes', 'Masuk', 'Lama rawat', 'Diagnosis', 'Tarif'], c.history.map((x) => [h('span', { class: 'mono' }, x.claim_id), x.facility_id, x.admit_date, `${x.length_of_stay} hari`, x.diagnosis_code, rp(x.amount)]), { num: [5] }),

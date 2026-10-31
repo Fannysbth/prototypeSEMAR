@@ -18,7 +18,25 @@ export const pct = (x, d = 1) => (x === null || x === undefined ? '-' : `${(x * 
 export const ago = (ms) => { const m = Math.max(0, Math.round((Date.now() - ms) / 60000)); return m < 60 ? `${m} menit` : m < 1440 ? `${Math.round(m / 60)} jam` : `${Math.round(m / 1440)} hari`; };
 
 const RISK_ICON = { HIGH: '▲', MEDIUM: '◆', LOW: '●' };
-export const badge = (lvl) => h('span', { class: `badge ${lvl}` }, RISK_ICON[lvl] ?? '', ' ', lvl);
+export const RISK_LABEL = { HIGH: 'Tinggi', MEDIUM: 'Sedang', LOW: 'Rendah' };
+export const badge = (lvl) => h('span', { class: `badge ${lvl}` }, RISK_ICON[lvl] ?? '', ' ', RISK_LABEL[lvl] ?? lvl);
+
+// MODUS = pola kecurangan yang ditandai aturan (self-referral, cloning, dst.). SINYAL = asal isyarat: aturan, ML anomali, ML supervised.
+export const MODUS_LABEL = {
+  SELF_REFERRAL: 'Self-referral', PHANTOM_BILLING: 'Phantom billing', CLONING: 'Cloning', UPCODING: 'Upcoding', UNBUNDLING: 'Unbundling',
+  REPEAT_BILLING: 'Repeat billing', PROLONGED_LOS: 'Prolonged LOS', PROCEDURE_MISMATCH: 'Prosedur tidak sesuai', ML_ANOMALY: 'ML anomali', ML_SUPERVISED: 'ML supervised',
+};
+export const labelOf = (k) => RISK_LABEL[k] ?? MODUS_LABEL[k] ?? String(k).replaceAll('_', ' ');
+const ML_MODI = ['ML_ANOMALY', 'ML_SUPERVISED'];
+export const modusOf = (c) => (c.modi ?? []).filter((m) => !ML_MODI.includes(m));
+export const modusCell = (c) => { const m = modusOf(c); return m.length ? m.map(labelOf).join(', ') : '-'; };
+export const sinyalCell = (c) => {
+  const modi = c.modi ?? [];
+  const tags = [modusOf(c).length ? 'Aturan' : null, modi.includes('ML_ANOMALY') ? 'ML anomali' : null, modi.includes('ML_SUPERVISED') ? 'ML supervised' : null].filter(Boolean);
+  return h('span', { class: 'tags' }, tags.length ? tags.map((t) => h('span', { class: 'tag' }, t)) : '-');
+};
+export const SUMBER_LABEL = { llm: 'AI', template: 'Templat' };
+export const sumberBadge = (src) => h('span', { class: `badge status sumber-${src ?? 'none'}`, title: src === 'llm' ? 'Penjelasan ditulis model AI dari data tanpa identitas' : 'Penjelasan dari templat aturan' }, SUMBER_LABEL[src] ?? '-');
 export const statusBadge = (s) => h('span', { class: `badge status ${s}` }, String(s).replaceAll('_', ' '));
 
 // Penjelasan rumus "potensi nilai dipertanyakan" per modus. Ini estimasi dari aturan, bukan kerugian terkonfirmasi.
