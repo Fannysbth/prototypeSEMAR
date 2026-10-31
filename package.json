@@ -15,6 +15,7 @@
     "reset:neon": "node scripts/reset.js --drop-schemas",
     "gen-secrets": "node scripts/gen-secrets.js",
     "generate-data": "node scripts/generate-data/index.js",
+    "seed-demo": "node scripts/seed-demo.js",
     "import-kaggle": "node scripts/import-kaggle/index.js",
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
