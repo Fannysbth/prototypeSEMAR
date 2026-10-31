@@ -1,5 +1,6 @@
 // Penulis laporan: reports/evaluation.md dan reports/data-card.md dari objek metrics (satu-satunya sumber angka).
 import { HOLDOUT_MODUS, VARIANTS } from './offline.js';
+import { kaggleReadme } from './kaggle.js';
 
 const pct = (x) => (x === null || x === undefined ? '-' : `${(x * 100).toFixed(1)}%`);
 const st = (s, f = pct) => (s ? `${f(s.mean)} (${f(s.min)} - ${f(s.max)})` : '-');
@@ -154,6 +155,9 @@ ${m.limitations.map((x) => `- ${x}`).join('\n')}
 
 // Blok hasil untuk README (diganti otomatis di antara penanda HASIL oleh scripts/render-readme.js).
 export function readmeBlock(m) {
+  return `${readmeBlockBase(m)}${kaggleReadme(m.kaggle)}`;
+}
+function readmeBlockBase(m) {
   const d = m.detection; const p = m.stack; const pr = m.protocol;
   const ho = (diff, v) => (d.holdout[diff][v] ? `${pct(d.holdout[diff][v].recall)} (n=${d.holdout[diff][v].n}, CI95 ${pct(d.holdout[diff][v].ci95.lo)}-${pct(d.holdout[diff][v].ci95.hi)})` : '-');
   const row = (diff, v) => { const x = d.summary[diff][v]; return [VARIANTS[v], st(x.precision_at_1pct), st(x.recall_at_1pct), st(x.rupiah_recall_at_1pct), x.pr_auc.mean.toFixed(3), x.roc_auc.mean.toFixed(3)]; };

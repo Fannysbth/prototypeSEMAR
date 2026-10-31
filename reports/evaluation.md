@@ -1,6 +1,6 @@
 # Laporan Evaluasi SAMAR
 
-Dibuat 2026-10-27T13:50:28.293Z · Node v24.12.0 · win32 x64 · 16 CPU. Seluruh angka di berkas ini berasal dari `reports/metrics.json` (keluaran `npm run evaluate`).
+Dibuat 2026-10-31T11:26:56.703Z · Node v24.12.0 · win32 x64 · 16 CPU. Seluruh angka di berkas ini berasal dari `reports/metrics.json` (keluaran `npm run evaluate`).
 
 ## Batas yang harus dibaca lebih dulu
 - Seluruh data sintetis. Label berasal dari generator, bukan hasil audit BPJS. Angka membuktikan mekanisme, bukan akurasi pada data JKN riil.
@@ -132,11 +132,11 @@ Total payload mengandung PII di zona token: **100% (baseline) menjadi 0% (SAMAR)
 ## 8. Kinerja
 | Mode | Rata-rata | p50 | p95 | p99 | Throughput | Error |
 |---|---|---|---|---|---|---|
-| baseline | 26.5 ms | 26 ms | 33.7 ms | 35.7 ms | 38.5 TPS | 0 |
-| proposed | 28.5 ms | 28.2 ms | 34.6 ms | 35.9 ms | 50.7 TPS | 0 |
+| baseline | 13.8 ms | 12.9 ms | 18.6 ms | 20.1 ms | 85.2 TPS | 0 |
+| proposed | 15.6 ms | 15.1 ms | 21.5 ms | 24 ms | 114.4 TPS | 0 |
 
-- Latensi POST /verify (SAMAR, 120 permintaan berurutan): p50 24.2 ms, **p95 31.6 ms**, maks 50.9 ms.
-- Throughput unggah CSV: 1000 baris dalam 3.12 detik = **321 baris/detik**.
+- Latensi POST /verify (SAMAR, 120 permintaan berurutan): p50 12.2 ms, **p95 18.3 ms**, maks 25.8 ms.
+- Throughput unggah CSV: 1000 baris dalam 22.9 detik = **43.7 baris/detik**.
 - Satu mesin, penyimpanan memori, layanan ml aktif. Latensi absolut dengan Postgres lewat jaringan lebih tinggi.
 
 ## 9. Keamanan: 23/23 percobaan tidak sah ditolak
@@ -200,3 +200,18 @@ Set hard:
 
 ## 12. Simulasi dampak
 Masukan skenario recall nilai dipertanyakan: rendah 23.8%, sedang 58.3%, tinggi 100.0% (recall nilai dipertanyakan @1% kapasitas, varian SAMAR lengkap, set uji hard, min/rerata/maks atas 6 run). Fraud rate, recovery rate, dan nilai klaim cabang adalah asumsi; hasil ada di halaman Evaluasi dan `GET /impact/scenarios`.
+
+## Sumber data 2: Kaggle (klaim Medicare AS, data publik non-BPJS)
+
+Evaluasi tingkat **penyedia**: 300 penyedia berlabel (28 berlabel fraud, prevalensi 9.3%), 31.386 klaim. Lipatan acak per penyedia, diulang 5 kali; penyedia uji tidak pernah terlihat saat latih. Angka = rata-rata ± simpangan baku antar ulangan (poin persentase). Kapasitas review k = 5% penyedia. Acak: PR-AUC = prevalensi (9.3%), ROC-AUC = 50%.
+
+| Varian | PR-AUC | ROC-AUC | precision@5% | recall@5% |
+|---|---|---|---|---|
+| Model lengkap (ml per penyedia) | 48.8% ± 3.9 | 90.0% ± 1.1 | 57.3% ± 5.3 | 30.7% ± 2.9 |
+| Tanpa fitur lintas faskes | 49.7% ± 1.9 | 89.7% ± 1.4 | 57.3% ± 5.3 | 30.7% ± 2.9 |
+| Tanpa ML (aturan: tagihan dan lama rawat tinggi) | 29.9% ± 0.0 | 81.6% ± 0.0 | 13.3% ± 0.0 | 7.1% ± 0.0 |
+| Tanpa aturan | tidak berlaku (detektor aturan bekerja per klaim lintas faskes, bukan per penyedia) | - | - | - |
+
+Bacaan: selisih antara "Model lengkap" dan "Tanpa fitur lintas faskes" menunjukkan sumbangan fitur lintas faskes pada data ini. Diukur pada 300 penyedia sehingga simpangan antar ulangan lebar; jangan dibaca sebagai bukti kuat. Fitur dilewati karena datanya tidak ada: referral_loop, selisih_tagih_verifikasi, jarak_kab_kota_faskes.
+
+**Batasan sumber ini:** Kaggle adalah data **publik non-BPJS** (Medicare AS tahun 2009): kode ICD-9, nilai USD, label `PotentialFraud` per penyedia (bukan per klaim). Skor dan metrik hanya sah di tingkat penyedia. Ekspor eval-kit di `reports/evalkit-kaggle/` (entity_id = faskes_id, group_id = State); evidence card eval-kit hanya dibuat untuk sumber sintetis.

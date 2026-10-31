@@ -4,29 +4,42 @@ Deteksi fraud klaim JKN lintas faskes di atas data terpseudonimisasi. Dibangun d
 
 SAMAR **tidak memutuskan fraud**. Keluarannya skor, alasan, dan prioritas review untuk verifikator. Model melihat riwayat lintas rumah sakit lewat token, dan tidak pernah melihat nama atau NIK.
 
-> Semua data sintetis (NIK berawalan `9999`). Tidak ada data peserta JKN riil dan tidak ada data sampel resmi BPJS di repo ini. Sistem menolak NIK riil (`SYNTHETIC_ONLY=true`).
+> Dua sumber data, keduanya tanpa data peserta JKN riil: (1) **sintetis** dari generator (NIK berawalan `9999`), dan (2) **dataset Kaggle publik** "Healthcare Provider Fraud Detection Analysis" (klaim Medicare AS 2009, tanpa nama atau NIK; BeneID tetap ditokenisasi seperti ID peserta). Data sampel resmi BPJS tidak ada di repo ini dan sistem menolak NIK riil (`SYNTHETIC_ONLY=true`). **Belum diuji di data BPJS dan belum terhubung ke sistem BPJS.**
 
-## Cara jalan
+## Cara jalan (dari laptop bersih)
 
-Prasyarat: Node.js 20+, Python 3.10+ (untuk layanan ml; tanpa Python sistem tetap jalan dengan detektor aturan saja).
+Prasyarat: Git, Node.js 20+, Python 3.10+ (layanan ml; tanpa Python sistem tetap jalan dengan detektor aturan saja), Docker (hanya untuk Postgres).
 
-| Langkah | Perintah |
+```bash
+git clone <url-repo> samar && cd samar
+npm install
+python -m venv services/ml/.venv                    # Windows: services\ml\.venv\Scripts\activate
+services/ml/.venv/bin/pip install -r services/ml/requirements.txt
+npm run demo:reset          # data sintetis + data latih model (mode file, tanpa database)
+npm start                   # buka http://localhost:3000
+npm test                    # semua tes harus hijau
+npm run evaluate            # membuat reports/ (sekitar 10-15 menit)
+```
+
+| Perintah | Fungsi |
 |---|---|
-| 1. Pasang dependensi Node | `npm install` |
-| 2. Pasang dependensi ml | `cd services/ml && pip install -r requirements.txt` |
-| 3. Siapkan data demo dan data latih model | `npm run demo:reset` |
-| 4. Jalankan semua layanan | `npm start` (buka http://localhost:3000) |
-| 5. Jalankan tes | `npm test` |
-| 6. Jalankan evaluasi (membuat `reports/`) | `npm run evaluate` (sekitar 10-15 menit) |
-| 7. Perbarui angka di README dari `reports/metrics.json` | `npm run readme` |
+| `npm run import-kaggle -- --sample 300` | Petakan dataset Kaggle ke skema SAMAR di `data/kaggle-mapped/` (300 penyedia; `--sample all` untuk semua) |
+| `npm run ml:train` | Tokenisasi BeneID lalu latih model ml dari data Kaggle (tulis `reports/ml-metrics.json`) |
+| `npm run readme` | Perbarui blok hasil di README dari `reports/metrics.json` |
+| `npm run migrate` | Terapkan migrasi Postgres (skema `vault`, `analytics`, `audit` dan peran per zona) |
+| `npm run seed` / `npm run demo:reset` | Dengan Postgres: kosongkan DB, 4 akun demo, impor data, latih ML |
+| `npm run audit:verify` | Periksa rantai hash `audit.audit_log` |
 
-Akun demo (tombol di halaman login; kata sandi `demo-<nama>`): `rs.melati` (faskes RS-A; juga `rs.kenanga`, `rs.cempaka`, `rs.anggrek`), `verifikator`, `auditor`, `admin`.
+### Sumber data
 
-Berkas unggah demo: `demo/fkrtl_batch_november_RS-A.csv` dan `demo/fkrtl_batch_november_RS-B.csv` (akun faskes hanya boleh mengunggah baris faskesnya sendiri). `demo/fkrtl_batch_november.csv` berisi keduanya dan dapat diunggah oleh verifikator. Kasus phantom billing dan cloning lintas 2 RS baru terlihat lengkap setelah kedua faskes mengunggah.
+- **Sintetis**: dibuat otomatis oleh `scripts/generate-data` (tidak perlu unduh).
+- **Kaggle**: unduh manual karena berkas tidak di-commit (`data/` ada di `.gitignore`). Buka halaman dataset "Healthcare Provider Fraud Detection Analysis" di Kaggle (cek lisensi di halaman itu), unduh lalu ekstrak delapan berkas CSV (`Train*`, `Test*`) ke `data/kaggle/`. Dengan Kaggle CLI: `kaggle datasets download -d rohitrox/healthcare-provider-fraud-detection-analysis -p data/kaggle --unzip` (periksa slug di halaman dataset). Hanya berkas `Train_*` yang dipakai. Lalu `npm run import-kaggle` dan `npm run ml:train`. Kartu data: `reports/data-card-kaggle.md`.
+
+Akun demo (tombol di halaman login; kata sandi `demo-<nama>`): `rs.melati` (faskes RS-A; juga `rs.kenanga`, `rs.cempaka`, `rs.anggrek`), `verifikator`, `auditor`, `admin`. Berkas unggah demo: `demo/fkrtl_batch_november_RS-A.csv` dan `..._RS-B.csv` (akun faskes hanya boleh mengunggah baris faskesnya sendiri). Berkas Kaggle diunggah verifikator lewat `POST /api/claims/upload?source=kaggle`.
 
 Opsi lain:
-- **Postgres**: `docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d db`, isi `DATABASE_URL` di `.env`, lalu `npm start`. Tanpa `DATABASE_URL`, data disimpan di folder `data/`.
-- **Docker penuh**: jalankan `npm run demo:reset` lebih dulu (membuat `services/ml/data/train.csv` yang di-mount ke kontainer ml), lalu `docker compose up --build`. Layanan ml berjalan di kontainer Python terpisah (`Dockerfile.ml`), jadi `ML_ENABLED=true`. Jika berkas latih tidak ada, kontainer ml hidup tetapi model belum siap dan gateway memakai aturan saja.
+- **Postgres dengan pemisahan zona**: `docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d db`, isi `DATABASE_URL_ADMIN`, `PRIVATE_DB_PASSWORD`, `TOKEN_DB_PASSWORD` di `.env` (lihat `.env.example`), lalu `npm run migrate` dan `npm run seed -- --reset`. Zona pribadi (privacy, gateway) memakai peran `samar_private` (skema vault + audit); zona token (claims, fraud, notify) memakai `samar_token` (skema analytics + audit insert saja, tanpa akses vault). Tes di atas Postgres: `SAMAR_TEST_PG=postgresql://samar:samar@127.0.0.1:5433/samar_test npm test`. Tanpa `DATABASE_URL`, data disimpan di folder `data/`.
+- **Docker penuh**: `docker compose up --build` (db, migrate, ml, samar). Mode ini belum saya jalankan ujung ke ujung.
 - **Swagger**: http://localhost:3000/docs (kontrak di `docs/openapi.yaml`).
 
 ## Arsitektur singkat
@@ -36,7 +49,7 @@ Browser (web/) -> Gateway -+-> Auth
                            +-> Privacy (satu-satunya yang menerima data pribadi; vault AES-GCM; audit berantai hash)
                            +-> Claims  --+
                            +-> Fraud ----+-- hanya token + atribut klaim
-                           |     +-> ml (Python: Isolation Forest + Gradient Boosting)
+                           |     +-> ml (Python: Isolation Forest per klaim + Random Forest per penyedia)
                            +-> Notify
 ```
 
@@ -51,7 +64,7 @@ Browser (web/) -> Gateway -+-> Auth
 ## Hasil evaluasi
 
 <!-- HASIL:START -->
-Sumber: `reports/metrics.json` (dibuat 2026-10-27 oleh `npm run evaluate`). 3 seed x fraud rate 1%/3% x 2 tingkat kesulitan; latih bulan 1-4, uji bulan 5-6; kapasitas review 1% klaim (asumsi). Angka = rerata (min-maks) antar 6 run per tingkat.
+Sumber: `reports/metrics.json` (dibuat 2026-10-31 oleh `npm run evaluate`). 3 seed x fraud rate 1%/3% x 2 tingkat kesulitan; latih bulan 1-4, uji bulan 5-6; kapasitas review 1% klaim (asumsi). Angka = rerata (min-maks) antar 6 run per tingkat.
 
 **Set hard (skenario lebih sulit, angka utama):**
 
@@ -74,17 +87,24 @@ Sumber: `reports/metrics.json` (dibuat 2026-10-27 oleh `npm run evaluate`). 3 se
 - Ablasi: baris "Tanpa fitur lintas faskes", "Tanpa ML", dan "Tanpa aturan" membandingkan kontribusi tiap komponen terhadap SAMAR lengkap.
 - Modus hold-out REPEAT_BILLING (tidak dipakai melatih model supervised), recall pada ambang kasus: SAMAR lengkap 100.0% (n=27, CI95 87.5%-100.0%) (standar) dan 100.0% (n=37, CI95 90.6%-100.0%) (hard); **ML saja** 0.0% (n=27, CI95 0.0%-12.5%) (standar) dan 0.0% (n=37, CI95 0.0%-9.4%) (hard).
 - Paritas deteksi baseline vs SAMAR: 387/387 klaim identik (100.0%). Payload di zona token yang memuat data pribadi: 100% menjadi 0%.
-- Latensi POST /verify p95 31.6 ms; throughput unggah CSV 321 baris/detik (satu mesin, penyimpanan memori).
+- Latensi POST /verify p95 18.3 ms; throughput unggah CSV 43.7 baris/detik (satu mesin, penyimpanan memori).
 - Keamanan: 23/23 percobaan akses tidak sah ditolak; fungsional 9/9 lulus.
 - Evidence card eval-kit: `reports/evidence.html` dan `reports/evidence-hard.html` (6 butir keterbatasan otomatis dari kit, lihat `reports/evaluation.md`).
 
 > PR-AUC rata-rata >= 0,95: ini dibaca sebagai bukti mekanisme (pola fraud di generator dan detektor sejalan), bukan akurasi pada data nyata. Lihat set hard.
+
+**Sumber 2: Kaggle (Medicare AS 2009, publik non-BPJS), tingkat penyedia, 300 penyedia, 5x lipatan per penyedia:** PR-AUC 48.8% ± 3.9 (acak 9.3%), ROC-AUC 90.0% ± 1.1, precision@5% 57.3% ± 5.3, recall@5% 30.7% ± 2.9. Tanpa fitur lintas faskes: PR-AUC 49.7% ± 1.9. Aturan sederhana tanpa ML: PR-AUC 29.9% ± 0.0. Detail: `reports/evaluation.md`.
 
 <!-- HASIL:END -->
 
 Laporan lengkap: `reports/evaluation.md`. Kartu data: `reports/data-card.md`. Halaman *Evaluasi* di web (auditor dan admin) menampilkan metrik, ablasi, hold-out, perbandingan tanpa/dengan SAMAR, dan evidence card.
 
 ## Batasan yang jujur
+
+- **Dua sumber data, dua jenis klaim.** Sintetis: label dari generator. **Kaggle: klaim Medicare AS tahun 2009**, kode diagnosis **ICD-9** (bukan ICD-10), nilai **USD**, dan label `PotentialFraud` **per penyedia, bukan per klaim**. Evaluasi Kaggle hanya sah di tingkat penyedia; tidak ada akurasi per klaim dan tidak ada nilai verifikasi (FKL48), rujukan, atau lokasi penyedia. Memilih 300 penyedia secara acak memutus riwayat lintas faskes (hanya sebagian kecil beneficiary yang berobat ke lebih dari satu penyedia di subset; lihat `reports/data-card-kaggle.md`).
+- **Pada data Kaggle, fitur lintas faskes tidak terbukti menambah kinerja**: PR-AUC model lengkap dan tanpa fitur lintas faskes sama dalam rentang simpangan antar ulangan (lihat `reports/evaluation.md`). Keunggulan model terhadap aturan sederhana datang dari fitur tingkat penyedia, bukan dari riwayat lintas faskes. Bukti sumbangan lintas faskes saat ini hanya ada di data sintetis, yang polanya dibuat generator.
+- **Belum diuji di data BPJS dan belum terhubung ke sistem BPJS.** Seluruh angka berasal dari data sintetis atau data publik AS; tidak ada yang mengukur kinerja pada klaim JKN.
+- **Postgres**: pemisahan zona ditegakkan lewat peran dan GRANT (diuji), tetapi penyimpanan berupa tabel dokumen jsonb per koleksi di dalam skema zona, bukan tabel bertipe per kolom seperti sketsa di `docs/04-skema-data.md`. Impor batch besar tetap lewat pipeline per klaim (tokenisasi dan deteksi), bukan COPY.
 
 - **Data sintetis, label dari generator.** Angka membuktikan mekanisme, bukan akurasi pada data JKN riil. Generator dan detektor ditulis oleh pihak yang sama; set standar cenderung optimistis. Karena itu set hard (fraud lebih halus, hard negatives tambahan, satu modus tanpa detektor aturan) ditampilkan berdampingan.
 - **Kapasitas review 1% klaim adalah asumsi**, bukan kapasitas verifikator BPJS. Pada fraud rate 3% recall@1% dibatasi oleh kapasitas.

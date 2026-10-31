@@ -1,0 +1,68 @@
+{
+  "k_persen": 5.0,
+  "ulangan": 5,
+  "n_penyedia": 300,
+  "n_fraud": 28,
+  "prevalensi": 0.0933,
+  "varian": {
+    "full": {
+      "pr_auc": {
+        "mean": 0.4881,
+        "sd": 0.0385
+      },
+      "roc_auc": {
+        "mean": 0.9003,
+        "sd": 0.0106
+      },
+      "precision_at_k": {
+        "mean": 0.5733,
+        "sd": 0.0533
+      },
+      "recall_at_k": {
+        "mean": 0.3071,
+        "sd": 0.0286
+      }
+    },
+    "no_cross": {
+      "pr_auc": {
+        "mean": 0.4968,
+        "sd": 0.0186
+      },
+      "roc_auc": {
+        "mean": 0.8973,
+        "sd": 0.0141
+      },
+      "precision_at_k": {
+        "mean": 0.5733,
+        "sd": 0.0533
+      },
+      "recall_at_k": {
+        "mean": 0.3071,
+        "sd": 0.0286
+      }
+    },
+    "no_ml": {
+      "pr_auc": {
+        "mean": 0.2987,
+        "sd": 0.0
+      },
+      "roc_auc": {
+        "mean": 0.8163,
+        "sd": 0.0
+      },
+      "precision_at_k": {
+        "mean": 0.1333,
+        "sd": 0.0
+      },
+      "recall_at_k": {
+        "mean": 0.0714,
+        "sd": 0.0
+      }
+    },
+    "no_rules": null
+  },
+  "acak": {
+    "pr_auc": 0.0933,
+    "roc_auc": 0.5
+  }
+}

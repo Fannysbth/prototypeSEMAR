@@ -16,6 +16,7 @@ import { CASE_SCORE } from './eval/score.js';
 import { runKit } from './eval/kit.js';
 import { dataCardMd, evaluationMd } from './eval/report.js';
 import { renderReadme } from './render-readme.js';
+import { kaggleMd, runKaggleEval } from './eval/kaggle.js';
 
 const PESERTA = Number(process.env.EVAL_PESERTA || 4000);
 const log = (m) => console.log(m);
@@ -63,7 +64,11 @@ const LIMITATIONS = [
     functional: { passed: functional.filter((t) => t.pass).length, total: functional.length, tests: functional },
   };
 
-  log('\n=== Bagian 3: laporan dan eval-kit ===');
+  log('\n=== Bagian 3: sumber data kedua, Kaggle (per penyedia, data publik non-BPJS) ===');
+  const kaggle = runKaggleEval({ outDir: path.join(reports, 'evalkit-kaggle'), log });
+  log(kaggle.ran ? `  Kaggle: PR-AUC ${kaggle.varian.full.pr_auc.mean}, tanpa lintas faskes ${kaggle.varian.no_cross.pr_auc.mean}, aturan saja ${kaggle.varian.no_ml.pr_auc.mean}` : `  Kaggle dilewati: ${kaggle.reason}`);
+
+  log('\n=== Bagian 4: laporan dan eval-kit ===');
   const evidence = { ran: false, reason: 'belum dijalankan', limitations: [] };
   const kitRuns = [['standard', 'evalkit', 'evidence.html'], ['hard', 'evalkit-hard', 'evidence-hard.html']];
   for (const [difficulty, dir, html] of kitRuns) {
@@ -87,12 +92,15 @@ const LIMITATIONS = [
     impact_inputs: offline.impact_inputs,
     data_card: offline.runs,
     stack,
+    // Dipisah per sumber: detection/stack/data_card = sintetis; kaggle = data publik non-BPJS (per penyedia)
+    sources: { synthetic: ['detection', 'stack', 'data_card'], kaggle: ['kaggle'] },
+    kaggle,
     evidence_card: { ran: evidence.ran, reason: evidence.reason ?? null, limitations: evidence.limitations ?? [], hard_limitations: evidence.hard?.limitations ?? [], files: evidence.ran ? ['evidence.html', 'evidence-hard.html'] : [] },
     duration_seconds: Math.round((Date.now() - t0) / 1000),
   };
   delete metrics.detection.primary;
   write('metrics.json', JSON.stringify(metrics, null, 2));
-  write('evaluation.md', evaluationMd(metrics));
+  write('evaluation.md', `${evaluationMd(metrics)}\n${kaggleMd(metrics.kaggle)}`);
   write('data-card.md', dataCardMd(metrics));
   if (fs.existsSync(path.join(ROOT, 'README.md'))) renderReadme();
 
